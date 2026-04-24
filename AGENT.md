@@ -16,6 +16,7 @@
 
 - 本仓库已提供独立自动化测试工程：`@automationtest/`
 - 涉及登录流程、核心页面冒烟、权限路由校验、浏览器回归验证时，优先复用 `automationtest`，不要临时散落新的浏览器脚本
+- 浏览器测试涉及 workspace 管理员登录时，可直接使用默认账号密码：用户名 `admin`，密码 `admin`
 - 推荐顺序：
   - 先执行 `cd automationtest && npm run precheck`
   - 再执行 `npm run test:smoke` 或按需运行 `specs/` 下的指定用例
