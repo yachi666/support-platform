@@ -1,0 +1,28 @@
+{
+  "name": "automationtest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reusable Playwright automation project for support roster browser smoke and permission tests.",
+  "scripts": {
+    "restart:services": "../scripts/dev/restart-all.sh",
+    "precheck": "node ./scripts/precheck.mjs",
+    "test:raw": "playwright test",
+    "test": "npm run restart:services && npm run precheck && npm run test:raw",
+    "test:smoke:raw": "playwright test specs/auth specs/workspace specs/permissions",
+    "test:smoke": "npm run restart:services && npm run precheck && npm run test:smoke:raw",
+    "test:validation:raw": "playwright test specs/workspace/validation*.spec.mjs",
+    "test:validation": "npm run restart:services && npm run precheck && npm run test:validation:raw",
+    "test:headed": "npm run restart:services && npm run precheck && playwright test --headed",
+    "test:ui": "npm run restart:services && npm run precheck && playwright test --ui",
+    "codegen": "playwright codegen",
+    "install:browsers": "playwright install chromium"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "dotenv": "^16.6.1"
+  }
+}

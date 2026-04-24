@@ -1,3 +1,11 @@
 .dev-runtime/
 .gstack/
 .worktrees/
+.DS_Store
+.idea/
+.vscode/
+.agents/
+.plans/
+.playwright-cli/
+.spec/
+.trae/

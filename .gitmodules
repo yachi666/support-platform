@@ -1,0 +1,6 @@
+[submodule "support-roster-server"]
+	path = support-roster-server
+	url = https://github.com/yachi666/support-roster-server.git
+[submodule "support-roster-ui"]
+	path = support-roster-ui
+	url = https://github.com/yachi666/support-roster-ui.git
