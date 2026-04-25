@@ -240,6 +240,51 @@ custom_db_case() {
 
 custom_db_case
 
+default_username_case() {
+  local sandbox_root
+  sandbox_root="$(mktemp -d)"
+  trap 'rm -rf "$sandbox_root"' RETURN
+  setup_fake_repo "$sandbox_root"
+
+  cat >"$sandbox_root/bin/id" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$*" == "-un" ]]; then
+  echo portable-user
+  exit 0
+fi
+/usr/bin/id "$@"
+EOF
+  chmod +x "$sandbox_root/bin/id"
+
+  local trace_log="$sandbox_root/trace.log"
+  local brew_log="$sandbox_root/brew.log"
+  local db_ready_file="$sandbox_root/db.ready"
+  local pg_isready_log="$sandbox_root/pg-isready.log"
+  local test_path="$sandbox_root/bin:/usr/bin:/bin"
+  : >"$trace_log"
+  : >"$brew_log"
+  : >"$pg_isready_log"
+  : >"$db_ready_file"
+
+  PATH="$test_path" \
+  TRACE_LOG="$trace_log" \
+  BREW_LOG="$brew_log" \
+  DB_READY_FILE="$db_ready_file" \
+  PG_ISREADY_LOG="$pg_isready_log" \
+  BACKEND_HEALTH_URL="http://127.0.0.1:8080/actuator/health" \
+  FRONTEND_URL="http://127.0.0.1:5173" \
+  "$sandbox_root/scripts/dev/restart-all.sh" >/dev/null
+
+  assert_file_contains "$pg_isready_log" "-U portable-user"
+
+  rm -rf "$sandbox_root"
+  trap - RETURN
+  echo "PASS: defaults postgres readiness username to current user"
+}
+
+default_username_case
+
 missing_brew_case() {
   local sandbox_root
   sandbox_root="$(mktemp -d)"

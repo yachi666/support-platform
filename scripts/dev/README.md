@@ -13,7 +13,7 @@ Run all commands from the repository root.
 Uses these defaults unless overridden in the environment:
 
 - `DB_URL=jdbc:postgresql://127.0.0.1:5432/support`
-- `DB_USERNAME=lzn`
+- `DB_USERNAME=$(id -un)` (falls back to `postgres` if the current user cannot be resolved)
 - `DB_PASSWORD=123456`
 
 ### Start frontend in the foreground
@@ -58,7 +58,7 @@ It also prints progress logs for stopping, starting, and waiting for health chec
 `restart-all.sh` uses these defaults unless overridden in the environment:
 
 - `DB_URL=jdbc:postgresql://127.0.0.1:5432/support`
-- `DB_USERNAME=lzn`
+- `DB_USERNAME=$(id -un)` (falls back to `postgres` if the current user cannot be resolved)
 - `START_LOCAL_POSTGRES_WITH_BREW=0`
 
 If PostgreSQL is not ready and `START_LOCAL_POSTGRES_WITH_BREW` is left at `0`,
