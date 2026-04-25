@@ -9,6 +9,10 @@ BACKEND_LOG="$LOG_DIR/backend.log"
 FRONTEND_LOG="$LOG_DIR/frontend.log"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://127.0.0.1:8080/actuator/health}"
 FRONTEND_URL="${FRONTEND_URL:-http://127.0.0.1:5173}"
+DB_HOST="${DB_HOST:-127.0.0.1}"
+DB_PORT="${DB_PORT:-5432}"
+DB_NAME="${DB_NAME:-support}"
+DB_USERNAME="${DB_USERNAME:-lzn}"
 
 log() {
   echo "[restart-all] $*"
@@ -19,6 +23,58 @@ mkdir -p "$LOG_DIR"
 log "Stopping existing services if present."
 "$ROOT_DIR/scripts/dev/stop-all.sh"
 log "Stop phase completed."
+
+postgres_is_ready() {
+  if command -v pg_isready >/dev/null 2>&1; then
+    pg_isready -h "$DB_HOST" -p "$DB_PORT" -d "$DB_NAME" -U "$DB_USERNAME" >/dev/null 2>&1
+    return $?
+  fi
+
+  return 1
+}
+
+wait_for_postgres() {
+  local retries="$1"
+
+  log "Waiting for PostgreSQL at $DB_HOST:$DB_PORT/$DB_NAME"
+  for ((attempt = 1; attempt <= retries; attempt++)); do
+    if postgres_is_ready; then
+      log "PostgreSQL is ready."
+      return 0
+    fi
+
+    if (( attempt == 1 || attempt % 5 == 0 || attempt == retries )); then
+      log "PostgreSQL not ready yet (attempt $attempt/$retries)."
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+ensure_postgres_running() {
+  if postgres_is_ready; then
+    log "PostgreSQL is already ready."
+    return 0
+  fi
+
+  if ! command -v brew >/dev/null 2>&1; then
+    log "PostgreSQL is not ready and brew is unavailable."
+    return 1
+  fi
+
+  log "PostgreSQL is not ready; starting Homebrew service."
+  brew services start postgresql
+
+  if ! wait_for_postgres 45; then
+    log "PostgreSQL failed to become ready after brew startup."
+    return 1
+  fi
+}
+
+if ! ensure_postgres_running; then
+  exit 1
+fi
 
 start_in_background_without_proxy() {
   local script_path="$1"
