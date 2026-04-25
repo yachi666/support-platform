@@ -22,10 +22,6 @@ log() {
 
 mkdir -p "$LOG_DIR"
 
-log "Stopping existing services if present."
-"$ROOT_DIR/scripts/dev/stop-all.sh"
-log "Stop phase completed."
-
 parse_postgres_ready_target() {
   local normalized_url
   local authority
@@ -123,6 +119,10 @@ fi
 if ! ensure_postgres_running; then
   exit 1
 fi
+
+log "Stopping existing services if present."
+"$ROOT_DIR/scripts/dev/stop-all.sh"
+log "Stop phase completed."
 
 start_in_background_without_proxy() {
   local script_path="$1"

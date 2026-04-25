@@ -44,9 +44,9 @@ If nothing is running, it still exits successfully and prints what it checked.
 
 This is the preferred local development entry point. It:
 
-1. Stops existing frontend and backend listeners on `5173` and `8080`
-2. Verifies PostgreSQL readiness using `pg_isready` against the host, port, and database parsed from `DB_URL`
-3. Optionally starts Homebrew PostgreSQL if you set `START_LOCAL_POSTGRES_WITH_BREW=1`
+1. Verifies PostgreSQL readiness using `pg_isready` against the host, port, and database parsed from `DB_URL`
+2. Optionally starts Homebrew PostgreSQL if you set `START_LOCAL_POSTGRES_WITH_BREW=1`
+3. Stops existing frontend and backend listeners on `5173` and `8080`
 4. Restarts both services in the background
 5. Waits for `http://127.0.0.1:8080/actuator/health`
 6. Waits for `http://127.0.0.1:5173`
@@ -68,6 +68,8 @@ Set `START_LOCAL_POSTGRES_WITH_BREW=1` only when you want `restart-all.sh` to ru
 
 `pg_isready` must be available in `PATH` for the readiness check. On macOS with
 Homebrew PostgreSQL installed, it is typically available automatically.
+If this PostgreSQL preflight fails, `restart-all.sh` exits before stopping the
+currently running frontend or backend processes.
 
 Logs are written to:
 

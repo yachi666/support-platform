@@ -193,6 +193,7 @@ run_failure_case() {
 
   assert_exit_code "$exit_code" "1"
   assert_file_contains "$output_log" "$expected_message"
+  assert_file_empty "$trace_log"
 
   rm -rf "$sandbox_root"
   trap - RETURN
@@ -271,6 +272,7 @@ missing_brew_case() {
 
   assert_exit_code "$exit_code" "1"
   assert_file_contains "$output_log" "Homebrew is unavailable, so restart-all.sh cannot start PostgreSQL automatically."
+  assert_file_empty "$trace_log"
 
   rm -rf "$sandbox_root"
   trap - RETURN
@@ -311,6 +313,7 @@ missing_pg_isready_case() {
 
   assert_exit_code "$exit_code" "1"
   assert_file_contains "$output_log" "pg_isready is required to verify PostgreSQL readiness before restarting services."
+  assert_file_empty "$trace_log"
 
   rm -rf "$sandbox_root"
   trap - RETURN
