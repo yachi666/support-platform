@@ -109,6 +109,8 @@ npm run test:validation:raw
 
 - `specs/auth/login-smoke.spec.mjs`
 - `specs/auth/route-guard.spec.mjs`
+- `specs/contact-information/public-list.spec.mjs`
+- `specs/contact-information/admin-create.spec.mjs`
 - `specs/workspace/core-smoke.spec.mjs`
 - `specs/workspace/validation-regression.spec.mjs`
 - `specs/workspace/validation-cleanup-regression.spec.mjs`
