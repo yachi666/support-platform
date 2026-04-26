@@ -58,7 +58,10 @@ test.describe('contact information admin create', () => {
     await expect(authenticatedPage.getByText('Team saved successfully.')).toBeVisible()
 
     await authenticatedPage.getByLabel('Search teams, staff IDs, or links').fill(teamName)
-    await expect(authenticatedPage.getByRole('cell', { name: teamName })).toBeVisible()
-    await expect(authenticatedPage.getByRole('link', { name: 'Other' })).toBeVisible()
+    const createdRow = authenticatedPage.locator('tbody tr', {
+      has: authenticatedPage.getByRole('cell', { name: teamName }),
+    })
+    await expect(createdRow.getByRole('cell', { name: teamName })).toBeVisible()
+    await expect(createdRow.getByRole('link', { name: 'Other' })).toHaveAttribute('href', otherInfoUrl)
   })
 })
