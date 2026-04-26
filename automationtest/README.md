@@ -67,7 +67,7 @@ npm run test:validation:raw
 
 ## 数据准备与清理
 
-当前默认模式是**复用手工准备环境**，测试本身不主动建数。
+当前默认模式是**优先复用手工准备环境**，但对空环境下不稳定的回归场景，测试会按需自建数据并在结束后自动清理。
 
 但工程已经预留了两类扩展：
 
@@ -81,7 +81,12 @@ npm run test:validation:raw
    - 当前即使无建数，也统一走同一生命周期
    - 后续接入建数后，无需改测试外层结构
 
-当前已经接入两类自动建数回归：
+当前已经接入三类自动建数回归：
+
+- `specs/contact-information/public-list.spec.mjs`
+  - 通过 `AUTOTEST_DB_URL` 直连 PostgreSQL 插入独立 contact 数据
+  - 在公开列表页验证加载与搜索
+  - 测试结束后自动删除临时 contact
 
 - `seedMissingPrimaryCoverageScenario`
   - 自动创建 team / staff / primary shift / non-primary shift
@@ -110,7 +115,11 @@ npm run test:validation:raw
 - `specs/auth/login-smoke.spec.mjs`
 - `specs/auth/route-guard.spec.mjs`
 - `specs/contact-information/public-list.spec.mjs`
+  - 公开列表加载
+  - 公开搜索
 - `specs/contact-information/admin-create.spec.mjs`
+  - 管理员创建
+  - 创建后列表检索
 - `specs/workspace/core-smoke.spec.mjs`
 - `specs/workspace/validation-regression.spec.mjs`
 - `specs/workspace/validation-cleanup-regression.spec.mjs`

@@ -4,7 +4,7 @@ import { escapeSqlLiteral, executeSql } from '../../helpers/postgres-cli.mjs'
 import { gotoApp } from '../../helpers/route-assertions.mjs'
 
 test.describe('contact information admin create', () => {
-  test('admin can create a contact information record', async ({ authenticatedPage, cleanupRegistry }) => {
+  test('admin can create a contact information record and find it on the list page', async ({ authenticatedPage, cleanupRegistry }) => {
     const primaryUser = requirePrimaryUser()
     const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const teamName = `AUTOTEST Contact ${runId}`
