@@ -9,12 +9,116 @@ BACKEND_LOG="$LOG_DIR/backend.log"
 FRONTEND_LOG="$LOG_DIR/frontend.log"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://127.0.0.1:8080/actuator/health}"
 FRONTEND_URL="${FRONTEND_URL:-http://127.0.0.1:5173}"
+DB_URL="${DB_URL:-jdbc:postgresql://127.0.0.1:5432/support}"
+DB_USERNAME="${DB_USERNAME:-$(id -un 2>/dev/null || printf 'postgres')}"
+START_LOCAL_POSTGRES_WITH_BREW="${START_LOCAL_POSTGRES_WITH_BREW:-0}"
+POSTGRES_READY_HOST=""
+POSTGRES_READY_PORT=""
+POSTGRES_READY_DB_NAME=""
 
 log() {
   echo "[restart-all] $*"
 }
 
 mkdir -p "$LOG_DIR"
+
+parse_postgres_ready_target() {
+  local normalized_url
+  local authority
+  local database_name
+
+  normalized_url="${DB_URL#jdbc:postgresql://}"
+  if [[ "$normalized_url" == "$DB_URL" ]]; then
+    log "DB_URL must use jdbc:postgresql://host[:port]/database format."
+    return 1
+  fi
+
+  normalized_url="${normalized_url%%\?*}"
+  authority="${normalized_url%%/*}"
+  database_name="${normalized_url#*/}"
+
+  if [[ -z "$authority" || -z "$database_name" || "$database_name" == "$normalized_url" ]]; then
+    log "DB_URL must include both a PostgreSQL host and database name."
+    return 1
+  fi
+
+  POSTGRES_READY_HOST="${authority%%:*}"
+  POSTGRES_READY_PORT="5432"
+  if [[ "$authority" == *:* ]]; then
+    POSTGRES_READY_PORT="${authority##*:}"
+  fi
+  POSTGRES_READY_DB_NAME="$database_name"
+}
+
+postgres_readiness_tools_available() {
+  if ! command -v pg_isready >/dev/null 2>&1; then
+    log "pg_isready is required to verify PostgreSQL readiness before restarting services."
+    return 1
+  fi
+}
+
+postgres_is_ready() {
+  pg_isready -h "$POSTGRES_READY_HOST" -p "$POSTGRES_READY_PORT" -d "$POSTGRES_READY_DB_NAME" -U "$DB_USERNAME" >/dev/null 2>&1
+}
+
+wait_for_postgres() {
+  local retries="$1"
+
+  log "Waiting for PostgreSQL at $POSTGRES_READY_HOST:$POSTGRES_READY_PORT/$POSTGRES_READY_DB_NAME"
+  for ((attempt = 1; attempt <= retries; attempt++)); do
+    if postgres_is_ready; then
+      log "PostgreSQL is ready."
+      return 0
+    fi
+
+    if (( attempt == 1 || attempt % 5 == 0 || attempt == retries )); then
+      log "PostgreSQL not ready yet (attempt $attempt/$retries)."
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+ensure_postgres_running() {
+  if ! postgres_readiness_tools_available; then
+    return 1
+  fi
+
+  if postgres_is_ready; then
+    log "PostgreSQL is already ready."
+    return 0
+  fi
+
+  if [[ "$START_LOCAL_POSTGRES_WITH_BREW" != "1" ]]; then
+    log "PostgreSQL is not ready. Set START_LOCAL_POSTGRES_WITH_BREW=1 to allow restart-all.sh to start Homebrew PostgreSQL automatically."
+    return 1
+  fi
+
+  if ! command -v brew >/dev/null 2>&1; then
+    log "Homebrew is unavailable, so restart-all.sh cannot start PostgreSQL automatically."
+    return 1
+  fi
+
+  log "PostgreSQL is not ready; starting Homebrew PostgreSQL service."
+  if ! brew services start postgresql; then
+    log "Homebrew failed to start PostgreSQL."
+    return 1
+  fi
+
+  if ! wait_for_postgres 45; then
+    log "PostgreSQL failed to become ready after brew startup."
+    return 1
+  fi
+}
+
+if ! parse_postgres_ready_target; then
+  exit 1
+fi
+
+if ! ensure_postgres_running; then
+  exit 1
+fi
 
 log "Stopping existing services if present."
 "$ROOT_DIR/scripts/dev/stop-all.sh"
