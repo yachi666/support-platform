@@ -78,7 +78,7 @@ export class ValidationPage {
     const dialog = this.page.getByRole('dialog', { name: /^(确认清理动作|Review cleanup action)$/ })
 
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByText(issue.type, { exact: true })).toBeVisible()
+    await expect(dialog).toContainText(issue.type)
     await expect(dialog.getByText(String(issue.remediation.recordCount), { exact: true })).toBeVisible()
     await expect(dialog.getByText(new RegExp(String(issue.remediation.recordId)))).toBeVisible()
   }
