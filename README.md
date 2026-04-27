@@ -2,7 +2,7 @@
 
 [中文](./README.zh-CN.md)
 
-![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 ![Backend](https://img.shields.io/badge/Backend-Spring_Boot_4-6db33f?style=flat-square)
 ![Frontend](https://img.shields.io/badge/Frontend-Vue_3-42b883?style=flat-square)
 ![Testing](https://img.shields.io/badge/Testing-Playwright-2ead33?style=flat-square)
@@ -126,4 +126,4 @@ Default local administrator credentials for browser verification are documented 
 
 ## License
 
-The parent workspace is released under the [Apache License 2.0](./LICENSE). Submodules may carry their own license files; check each project before redistributing it independently.
+The parent workspace is released under the [MIT License](./LICENSE). Submodules may carry their own license files; check each project before redistributing it independently.

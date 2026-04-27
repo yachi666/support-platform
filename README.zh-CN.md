@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 ![Backend](https://img.shields.io/badge/Backend-Spring_Boot_4-6db33f?style=flat-square)
 ![Frontend](https://img.shields.io/badge/Frontend-Vue_3-42b883?style=flat-square)
 ![Testing](https://img.shields.io/badge/Testing-Playwright-2ead33?style=flat-square)
@@ -126,4 +126,4 @@ npm run test:smoke
 
 ## 许可证
 
-父级工作区采用 [Apache License 2.0](./LICENSE)。子模块可能有独立许可证，单独分发前请查看对应项目的 `LICENSE`。
+父级工作区采用 [MIT License](./LICENSE)。子模块可能有独立许可证，单独分发前请查看对应项目的 `LICENSE`。
