@@ -117,10 +117,10 @@ npm run test:smoke
 
 | 范围 | 入口 |
 |------|------|
-| 后端 README | [`support-roster-server/README.md`](./support-roster-server/README.md) |
-| 后端 specs | [`support-roster-server/.specs/_index.md`](./support-roster-server/.specs/_index.md) |
-| 前端 README | [`support-roster-ui/README.md`](./support-roster-ui/README.md) |
-| 前端 specs | [`support-roster-ui/.specs/spec.md`](./support-roster-ui/.specs/spec.md) |
+| 后端 README | [`support-roster-server/README.md`](https://github.com/yachi666/support-roster-server/blob/main/README.md) |
+| 后端 specs | [`support-roster-server/.specs/_index.md`](https://github.com/yachi666/support-roster-server/blob/main/.specs/_index.md) |
+| 前端 README | [`support-roster-ui/README.md`](https://github.com/yachi666/support-roster-ui/blob/main/README.md) |
+| 前端 specs | [`support-roster-ui/.specs/spec.md`](https://github.com/yachi666/support-roster-ui/blob/main/.specs/spec.md) |
 | 自动化 README | [`automationtest/README.md`](./automationtest/README.md) |
 | 开发脚本 README | [`scripts/dev/README.md`](./scripts/dev/README.md) |
 

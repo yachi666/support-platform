@@ -117,10 +117,10 @@ Default local administrator credentials for browser verification are documented 
 
 | Area | Entry Point |
 |------|-------------|
-| Backend README | [`support-roster-server/README.md`](./support-roster-server/README.md) |
-| Backend specs | [`support-roster-server/.specs/_index.md`](./support-roster-server/.specs/_index.md) |
-| Frontend README | [`support-roster-ui/README.md`](./support-roster-ui/README.md) |
-| Frontend specs | [`support-roster-ui/.specs/spec.md`](./support-roster-ui/.specs/spec.md) |
+| Backend README | [`support-roster-server/README.md`](https://github.com/yachi666/support-roster-server/blob/main/README.md) |
+| Backend specs | [`support-roster-server/.specs/_index.md`](https://github.com/yachi666/support-roster-server/blob/main/.specs/_index.md) |
+| Frontend README | [`support-roster-ui/README.md`](https://github.com/yachi666/support-roster-ui/blob/main/README.md) |
+| Frontend specs | [`support-roster-ui/.specs/spec.md`](https://github.com/yachi666/support-roster-ui/blob/main/.specs/spec.md) |
 | Automation README | [`automationtest/README.md`](./automationtest/README.md) |
 | Dev scripts README | [`scripts/dev/README.md`](./scripts/dev/README.md) |
 
