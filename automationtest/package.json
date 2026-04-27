@@ -2,6 +2,7 @@
   "name": "automationtest",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Reusable Playwright automation project for support roster browser smoke and permission tests.",
   "scripts": {
