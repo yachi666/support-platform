@@ -1,77 +1,111 @@
 # Development Scripts
 
-Run all commands from the repository root.
+[中文](./README.zh-CN.md)
 
-## Available Commands
+Local orchestration scripts for the support roster workspace. Run all commands from the repository root unless a script explicitly says otherwise.
 
-### Start backend in the foreground
+## Command Overview
 
-```bash
-./scripts/dev/start-backend.sh
-```
+| Command | Purpose |
+|---------|---------|
+| `./scripts/dev/start-backend.sh` | Start `support-roster-server` in the foreground. |
+| `./scripts/dev/start-frontend.sh` | Start `support-roster-ui` in the foreground. |
+| `./scripts/dev/stop-all.sh` | Stop tracked services and listeners on the default ports. |
+| `./scripts/dev/restart-all.sh` | Restart backend and frontend in the background, then wait for health checks. |
+| `./scripts/dev/test-restart-all.sh` | Exercise the restart script behavior. |
 
-Uses these defaults unless overridden in the environment:
-
-- `DB_URL=jdbc:postgresql://127.0.0.1:5432/support`
-- `DB_USERNAME=$(id -un)` (falls back to `postgres` if the current user cannot be resolved)
-- `DB_PASSWORD=123456`
-
-### Start frontend in the foreground
-
-```bash
-./scripts/dev/start-frontend.sh
-```
-
-Uses these defaults unless overridden in the environment:
-
-- `HOST=127.0.0.1`
-- `PORT=5173`
-
-### Stop both services
-
-```bash
-./scripts/dev/stop-all.sh
-```
-
-Stops tracked processes and any listeners on ports `8080` and `5173`.
-If nothing is running, it still exits successfully and prints what it checked.
-
-### Restart and verify both services
+## Recommended Entry Point
 
 ```bash
 ./scripts/dev/restart-all.sh
 ```
 
-This is the preferred local development entry point. It:
+`restart-all.sh` is the preferred local development entry point. It:
 
-1. Verifies PostgreSQL readiness using `pg_isready` against the host, port, and database parsed from `DB_URL`
-2. Optionally starts Homebrew PostgreSQL if you set `START_LOCAL_POSTGRES_WITH_BREW=1`
-3. Stops existing frontend and backend listeners on `5173` and `8080`
-4. Restarts both services in the background
-5. Waits for `http://127.0.0.1:8080/actuator/health`
-6. Waits for `http://127.0.0.1:5173`
+1. Parses `DB_URL` and verifies PostgreSQL readiness with `pg_isready`.
+2. Optionally starts Homebrew PostgreSQL when `START_LOCAL_POSTGRES_WITH_BREW=1`.
+3. Stops existing listeners on ports `8080` and `5173`.
+4. Starts backend and frontend in the background.
+5. Waits for `http://127.0.0.1:8080/actuator/health`.
+6. Waits for `http://127.0.0.1:5173`.
+7. Writes runtime logs under `.dev-runtime/logs/`.
 
-When services are restarted in the background, the script explicitly disables proxy
-environment variables and bypasses proxies for local health checks.
-It also prints progress logs for stopping, starting, and waiting for health checks.
+## Defaults
 
-`restart-all.sh` uses these defaults unless overridden in the environment:
+| Variable | Used By | Default |
+|----------|---------|---------|
+| `DB_URL` | Backend and restart preflight | `jdbc:postgresql://127.0.0.1:5432/support` |
+| `DB_USERNAME` | Backend and PostgreSQL readiness | current system user, with script-specific fallback |
+| `DB_PASSWORD` | Backend | `123456` |
+| `HOST` | Frontend | `127.0.0.1` |
+| `PORT` | Frontend | `5173` |
+| `BACKEND_HEALTH_URL` | Restart health check | `http://127.0.0.1:8080/actuator/health` |
+| `FRONTEND_URL` | Restart health check | `http://127.0.0.1:5173` |
+| `START_LOCAL_POSTGRES_WITH_BREW` | Restart preflight | `0` |
 
-- `DB_URL=jdbc:postgresql://127.0.0.1:5432/support`
-- `DB_USERNAME=$(id -un)` (falls back to `postgres` if the current user cannot be resolved)
-- `START_LOCAL_POSTGRES_WITH_BREW=0`
+## Individual Commands
 
-If PostgreSQL is not ready and `START_LOCAL_POSTGRES_WITH_BREW` is left at `0`,
-the script exits with a clear message instead of mutating the local machine state.
-Set `START_LOCAL_POSTGRES_WITH_BREW=1` only when you want `restart-all.sh` to run
-`brew services start postgresql` on your machine.
+### Start Backend
 
-`pg_isready` must be available in `PATH` for the readiness check. On macOS with
-Homebrew PostgreSQL installed, it is typically available automatically.
-If this PostgreSQL preflight fails, `restart-all.sh` exits before stopping the
-currently running frontend or backend processes.
+```bash
+./scripts/dev/start-backend.sh
+```
 
-Logs are written to:
+Starts the Spring Boot service in the foreground. Use this when you want backend logs directly in the terminal.
 
-- `.dev-runtime/logs/backend.log`
-- `.dev-runtime/logs/frontend.log`
+### Start Frontend
+
+```bash
+./scripts/dev/start-frontend.sh
+```
+
+Starts the Vite development server in the foreground.
+
+### Stop Services
+
+```bash
+./scripts/dev/stop-all.sh
+```
+
+Stops tracked background processes and any listeners on ports `8080` and `5173`. It exits successfully even when nothing is running.
+
+### Restart Services
+
+```bash
+./scripts/dev/restart-all.sh
+```
+
+Starts both services in the background with local proxy variables disabled for health checks. Logs are written to:
+
+```text
+.dev-runtime/logs/backend.log
+.dev-runtime/logs/frontend.log
+```
+
+## PostgreSQL Preflight
+
+`restart-all.sh` exits before stopping existing services if PostgreSQL is not ready. This protects a working frontend/backend session from being torn down when the database is unavailable.
+
+Requirements:
+
+- `DB_URL` must use `jdbc:postgresql://host[:port]/database`.
+- `pg_isready` must be available in `PATH`.
+- Set `START_LOCAL_POSTGRES_WITH_BREW=1` only when you want the script to run `brew services start postgresql`.
+
+## Example
+
+```bash
+DB_URL=jdbc:postgresql://127.0.0.1:5432/support \
+DB_USERNAME="$(id -un)" \
+DB_PASSWORD=123456 \
+./scripts/dev/restart-all.sh
+```
+
+After a successful restart:
+
+```text
+Frontend: http://127.0.0.1:5173
+Backend health: http://127.0.0.1:8080/actuator/health
+Backend log: .dev-runtime/logs/backend.log
+Frontend log: .dev-runtime/logs/frontend.log
+```

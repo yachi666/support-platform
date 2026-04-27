@@ -1,63 +1,87 @@
-# automationtest
+# Automation Test
 
-独立的浏览器自动化工程，面向 `support-roster-ui` / `support-roster-server` 的可复用 E2E 冒烟与权限路由验证。
+[中文](./README.zh-CN.md)
 
-## 当前目标
+Reusable Playwright automation for the support roster platform. This project lives in the parent workspace so browser coverage can exercise `support-roster-ui`, `support-roster-server`, and local development scripts together without adding one-off test scripts inside either submodule.
 
-- 登录流程冒烟
-- 受保护路由校验
-- 核心工作台页面冒烟
-- 为后续角色权限回归、业务流程回归、自动化建数/清数预留扩展点
-- workspace validation blocker 回归
+## Coverage
 
-## 设计原则
+| Area | What It Checks |
+|------|----------------|
+| Authentication | Login smoke, account activation assumptions, and protected-route redirects. |
+| Workspace smoke | Core workspace pages load for an authenticated user. |
+| Permissions | Admin-only navigation and route access checks. |
+| Contact information | Public list/search and admin create flows. |
+| Validation regressions | Missing primary coverage, invalid references, cleanup confirmation, and validation recompute flows. |
+| Linux passwords | Protected route guard and smoke coverage for the Linux password page. |
+| Roster regressions | Browser coverage for roster planning behavior. |
 
-- **松耦合**：页面对象、认证、断言、数据生命周期分层
-- **可扩展**：先做 smoke / route checks，后续可平滑扩到完整 E2E
-- **环境可复用**：支持手工准备测试环境，也为后续自动建数留接口
-- **清理可控**：即使首版不自动造数，也内置 cleanup registry，后续建数时能自动回收
-
-## 目录结构
+## Directory Guide
 
 ```text
 automationtest/
-  config/      # 环境与项目配置
-  fixtures/    # Playwright fixtures
-  helpers/     # 认证、断言、清理、数据契约
-  pages/       # Page Object Models
-  scripts/     # 预检脚本
-  specs/       # 测试用例
-  artifacts/   # 报告与运行产物
+├── config/       # Environment loading and Playwright project config
+├── fixtures/     # Shared Playwright fixtures
+├── helpers/      # Auth, API clients, DB helpers, seed contracts, cleanup registry
+├── pages/        # Page Object Models
+├── scripts/      # Precheck scripts
+├── specs/        # Test specs
+└── artifacts/    # Reports and run output
 ```
 
-## 环境变量
+## Prerequisites
 
-复制 `.env.example` 为本地 `.env`，按需填写：
+- Node.js `^20.19.0 || >=22.12.0`
+- npm
+- Playwright browser binaries
+- Local backend and frontend dependencies
+- PostgreSQL when running DB-backed regression seeds
 
-- `AUTOTEST_BASE_URL`
-- `AUTOTEST_API_BASE_URL`
-- `AUTOTEST_DB_URL`
-- `AUTOTEST_STAFF_ID`
-- `AUTOTEST_PASSWORD`
-
-后续扩展角色权限回归时，再补 `AUTOTEST_ADMIN_*` / `AUTOTEST_EDITOR_*` / `AUTOTEST_READONLY_*`。
-
-本地默认 smoke 账号当前可使用：
-
-- `AUTOTEST_STAFF_ID=123456`
-- `AUTOTEST_PASSWORD=12345678`
-
-## 使用方式
+Install dependencies and Chromium:
 
 ```bash
 cd automationtest
 npm install
-npm run test:smoke
+npm run install:browsers
 ```
 
-默认测试入口会先调用仓库根目录下的 `scripts/dev/restart-all.sh`，重启本地前后端服务并等待健康检查通过，然后再执行 `precheck` 与 Playwright。
+## Environment
 
-如需在服务已就绪时跳过重启，可使用原始入口：
+Copy `.env.example` to `.env` and adjust values when needed.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `AUTOTEST_BASE_URL` | `http://127.0.0.1:5173` | Frontend URL. |
+| `AUTOTEST_API_BASE_URL` | `http://127.0.0.1:8080/api` | Backend API base URL. |
+| `AUTOTEST_DB_URL` | `postgresql://localhost:5432/support` | PostgreSQL URL for DB-backed seeds. |
+| `AUTOTEST_DEFAULT_TIMEOUT_MS` | `15000` | Shared Playwright timeout. |
+| `AUTOTEST_TRACE` | `retain-on-failure` | Playwright trace policy. |
+| `AUTOTEST_WORKERS` | `1` | Worker count for stable local runs. |
+| `AUTOTEST_STAFF_ID` | empty in code, example uses `123456` | Primary smoke-test staff ID. |
+| `AUTOTEST_PASSWORD` | empty in code, example uses `12345678` | Primary smoke-test password. |
+
+Optional role-specific credentials are available for permission matrix growth:
+
+```text
+AUTOTEST_ADMIN_STAFF_ID
+AUTOTEST_ADMIN_PASSWORD
+AUTOTEST_EDITOR_STAFF_ID
+AUTOTEST_EDITOR_PASSWORD
+AUTOTEST_READONLY_STAFF_ID
+AUTOTEST_READONLY_PASSWORD
+```
+
+## Running Tests
+
+The default entries restart local services through `../scripts/dev/restart-all.sh`, run the precheck, and then execute Playwright.
+
+```bash
+npm run test
+npm run test:smoke
+npm run test:validation
+```
+
+Use raw entries when services are already running and you intentionally want to skip the restart step:
 
 ```bash
 npm run test:raw
@@ -65,69 +89,54 @@ npm run test:smoke:raw
 npm run test:validation:raw
 ```
 
-## 数据准备与清理
+Interactive and debugging commands:
 
-当前默认模式是**优先复用手工准备环境**，但对空环境下不稳定的回归场景，测试会按需自建数据并在结束后自动清理。
+```bash
+npm run test:headed
+npm run test:ui
+npm run codegen
+```
 
-但工程已经预留了两类扩展：
+## Current Specs
 
-1. `helpers/seed-contracts.mjs`
-   - 用来描述“测试运行前应该存在什么数据”
-   - 当前只做环境契约检查
-   - 后续可以扩展为自动建数入口
+```text
+specs/auth/linux-password-route-guard.spec.mjs
+specs/auth/login-smoke.spec.mjs
+specs/auth/route-guard.spec.mjs
+specs/contact-information/admin-create.spec.mjs
+specs/contact-information/public-list.spec.mjs
+specs/permissions/admin-route-access.spec.mjs
+specs/workspace/core-smoke.spec.mjs
+specs/workspace/linux-passwords-smoke.spec.mjs
+specs/workspace/roster-regression.spec.mjs
+specs/workspace/validation-cleanup-regression.spec.mjs
+specs/workspace/validation-regression.spec.mjs
+```
 
-2. `helpers/cleanup-registry.mjs`
-   - 每条测试都可注册 cleanup step
-   - 当前即使无建数，也统一走同一生命周期
-   - 后续接入建数后，无需改测试外层结构
+## Data Lifecycle
 
-当前已经接入三类自动建数回归：
+The project prefers reusable manual test environments, but regression specs can create isolated data when a scenario would otherwise be unstable.
 
-- `specs/contact-information/public-list.spec.mjs`
-  - 通过 `AUTOTEST_DB_URL` 直连 PostgreSQL 插入独立 contact 数据
-  - 在公开列表页验证加载与搜索
-  - 测试结束后自动删除临时 contact
+Two helper layers keep this controlled:
 
-- `seedMissingPrimaryCoverageScenario`
-  - 自动创建 team / staff / primary shift / non-primary shift
-  - 在独立 future month 写入仅非 primary 的 roster assignment
-  - 触发 `Missing Primary Coverage`
-  - 测试结束后自动删除 shift / staff / team
-- `seedValidationCleanupScenario`
-  - 通过 API 创建独立 team / primary shift
-  - 通过 `AUTOTEST_DB_URL` 直连 PostgreSQL，插入：
-    - `Invalid Team Scope`
-    - `Orphan Assignment`
-  - 在浏览器中验证 `立即修复 -> 预览删除 -> 二次确认 -> 校验重算`
-  - 测试结束后自动回收 DB 脏数据和 API 建立的 team / shift
+| Helper | Role |
+|--------|------|
+| `helpers/seed-contracts.mjs` | Describes required test data and creates scenario-specific records when needed. |
+| `helpers/cleanup-registry.mjs` | Registers cleanup steps so API-created and DB-created records are removed after each test. |
 
-建议分层扩展：
+Guidance:
 
-1. 优先用公开 API 构造“合法但高风险”的数据
-   - 例如 `Missing Primary Coverage`
-   - 优点是最接近真实用户路径，维护成本低
-2. 对于公开 API 无法稳定制造的脏状态，再补 DB 直连 seed
-   - 例如失效引用、历史脏 assignment、绕过正常写路径的异常数据
-   - 这类场景应单独标注为 `corruption-regression`
+- Prefer public or workspace APIs for legal, user-reachable data states.
+- Use direct PostgreSQL seeding only for corruption regressions that normal APIs cannot create reliably.
+- Add cleanup registration at the same time as any seed creation.
 
-## 当前首批用例
+## Troubleshooting
 
-- `specs/auth/login-smoke.spec.mjs`
-- `specs/auth/route-guard.spec.mjs`
-- `specs/contact-information/public-list.spec.mjs`
-  - 公开列表加载
-  - 公开搜索
-- `specs/contact-information/admin-create.spec.mjs`
-  - 管理员创建
-  - 创建后列表检索
-- `specs/workspace/core-smoke.spec.mjs`
-- `specs/workspace/validation-regression.spec.mjs`
-- `specs/workspace/validation-cleanup-regression.spec.mjs`
-- `specs/permissions/admin-route-access.spec.mjs`
+- Run `npm run precheck` first when environment setup is uncertain.
+- Use `npm run test:raw` only after confirming the frontend and backend are already available.
+- Check `.dev-runtime/logs/backend.log` and `.dev-runtime/logs/frontend.log` when default commands fail during service startup.
+- Keep new browser tests in this project rather than scattering temporary Playwright scripts across the UI or server submodules.
 
-## 后续建议
+## License
 
-- 加 `storageState` 缓存，区分 UI 登录冒烟与 API 登录加速用例
-- 加 editor / readonly 角色矩阵
-- 加自动建数与自动清数
-- 加 CI profile 与测试环境隔离
+This project is private workspace tooling. Package metadata currently declares `MIT`.
