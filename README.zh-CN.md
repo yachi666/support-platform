@@ -2,24 +2,72 @@
 
 [English](./README.md)
 
-Support Platform 是支持排班产品的父级工作区，集中管理后端服务、Vue 前端、本地开发脚本，以及可复用的 Playwright 自动化测试工程。
+![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square)
+![Backend](https://img.shields.io/badge/Backend-Spring_Boot_4-6db33f?style=flat-square)
+![Frontend](https://img.shields.io/badge/Frontend-Vue_3-42b883?style=flat-square)
+![Testing](https://img.shields.io/badge/Testing-Playwright-2ead33?style=flat-square)
 
-本仓库是 Git superproject。实际应用代码位于 Git submodule 中，因此父仓库提交与子模块提交需要分别处理。
+Support Platform 是支持排班系统的父级工作区，组合了 Spring Boot API、Vue 3 公开/后台 UI、本地开发编排脚本，以及可复用的 Playwright 回归自动化。
 
-## 项目组成
+它面向需要发布 on-call 覆盖、维护排班主数据、校验排班质量，并让浏览器冒烟测试贴近完整本地栈的团队。
 
-| 项目 | 路径 | 说明 |
+## 工作区组成
+
+| 组件 | 路径 | 说明 |
 |------|------|------|
 | Support Roster Server | [`support-roster-server/`](./support-roster-server/) | Spring Boot 后端，提供 viewer API、workspace API、认证、校验、导入和 PostgreSQL 持久化。 |
 | Support Roster UI | [`support-roster-ui/`](./support-roster-ui/) | Vue 3 SPA，承载公开排班看板、管理工作台、联系信息、产品更新和受保护工具页。 |
 | Automation Test | [`automationtest/`](./automationtest/) | Playwright 冒烟与回归测试，覆盖登录、路由守卫、工作台页面、权限和校验流程。 |
 | Development Scripts | [`scripts/dev/`](./scripts/dev/) | 本地前后端启动、停止、重启和健康检查脚本。 |
 
-## 效果示例
+## 效果截图
 
-公开看板按支持团队展示 on-call 时间线，并提供日期与时区控制。
+公开看板按支持团队展示 on-call 覆盖，并提供日期与时区控制。工作台页面覆盖排班维护、校验、权限和运营流程。
 
-![公开看板时间线示例](./test/viewer-white-bg-check.png)
+| 公开看板 | 工作台总览 |
+|---|---|
+| ![公开排班看板](./docs/assets/screenshots/public-viewer.png) | ![工作台总览](./docs/assets/screenshots/workspace-overview.png) |
+
+| 月排班 | 校验中心 |
+|---|---|
+| ![月排班页面](./docs/assets/screenshots/workspace-roster.png) | ![校验中心](./docs/assets/screenshots/workspace-validation.png) |
+
+| 联系信息 |
+|---|
+| ![联系信息页面](./docs/assets/screenshots/contact-information.png) |
+
+## 快速开始
+
+```bash
+git submodule update --init --recursive
+./scripts/dev/restart-all.sh
+```
+
+默认本地地址：
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | `http://127.0.0.1:5173` |
+| 后端健康检查 | `http://127.0.0.1:8080/actuator/health` |
+| 后端 API | `http://127.0.0.1:8080/api` |
+
+## 仓库模型
+
+本仓库是 Git superproject。后端和前端位于 Git submodule 中，因此应用代码变更和父级工作区变更需要分别提交。
+
+父仓库只记录每个子模块的 Git SHA，不直接包含后端或前端源码内容。
+
+```bash
+git submodule status
+git submodule update --init --recursive
+```
+
+修改子模块时：
+
+1. 先在对应子模块内提交并推送。
+2. 回到父仓库。
+3. 提交更新后的子模块指针。
+4. 按依赖顺序合并或推送：先子模块，后父仓库。
 
 ## 仓库结构
 
@@ -29,30 +77,14 @@ support-platform/
 ├── support-roster-ui/        # Git submodule: 前端应用
 ├── automationtest/           # 父仓库中的 Playwright 自动化工程
 ├── scripts/dev/              # 父仓库中的本地开发脚本
+├── docs/assets/screenshots/  # README 使用的精选截图
 ├── docs/                     # 父仓库文档
-├── test/                     # 父仓库测试/视觉资源
-└── .plans/                   # Agent 本地计划记录
+└── test/                     # 父仓库测试资源
 ```
-
-## 子模块工作流
-
-父仓库只记录子模块的 Git SHA，不记录子模块内文件内容。
-
-```bash
-git submodule status
-git submodule update --init --recursive
-```
-
-修改子模块时建议按以下顺序：
-
-1. 先在子模块仓库内完成提交和推送。
-2. 回到父仓库。
-3. 提交更新后的子模块指针。
-4. 如需创建 PR，按依赖顺序处理：先子模块，后父仓库。
 
 ## 本地开发
 
-推荐使用统一重启入口：
+推荐本地入口：
 
 ```bash
 ./scripts/dev/restart-all.sh
@@ -60,15 +92,15 @@ git submodule update --init --recursive
 
 该脚本会检查 PostgreSQL 可用性，重启后端和前端，等待健康检查，并将日志写入 `.dev-runtime/logs/`。
 
-默认访问地址：
+常用直接命令：
 
-| 服务 | 地址 |
-|------|------|
-| 前端 | `http://127.0.0.1:5173` |
-| 后端健康检查 | `http://127.0.0.1:8080/actuator/health` |
-| 后端 API | `http://127.0.0.1:8080/api` |
+```bash
+./scripts/dev/start-backend.sh
+./scripts/dev/start-frontend.sh
+./scripts/dev/stop-all.sh
+```
 
-## 浏览器自动化
+## 测试
 
 登录、工作台冒烟、路由守卫、权限和校验回归请优先使用共享自动化工程：
 
@@ -79,12 +111,7 @@ npm run precheck
 npm run test:smoke
 ```
 
-本地 workspace 冒烟测试默认账号：
-
-```text
-AUTOTEST_STAFF_ID=123456
-AUTOTEST_PASSWORD=12345678
-```
+浏览器验证使用的默认本地管理员账号见 [`AGENTS.md`](./AGENTS.md)。自动化环境变量账号见 [`automationtest/.env.example`](./automationtest/.env.example)。
 
 ## 文档入口
 
