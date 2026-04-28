@@ -21,16 +21,4 @@ export class LinuxPasswordAuditPage {
       this.page.locator('table tbody tr').filter({ hasText: hostname }).first(),
     ).toBeVisible()
   }
-
-  async expectAuditRecordWithAction(hostname, action) {
-    const row = this.page.locator('table tbody tr').filter({ hasText: hostname }).first()
-    await expect(row).toBeVisible()
-    await expect(row).toContainText(action)
-  }
-
-  async expectSidebarLinkVisible(page) {
-    await expect(
-      page.getByRole('link', { name: /^(Audit Records|审计记录)$/ }),
-    ).toBeVisible()
-  }
 }
