@@ -153,14 +153,6 @@ export async function createWorkspaceApiClient(credentials = requirePrimaryUser(
         },
       })
     },
-    revealLinuxPasswordCredential(credentialId, action = 'VIEW') {
-      return requestJson({
-        token,
-        method: 'POST',
-        path: `/workspace/linux-passwords/credentials/${credentialId}/secret`,
-        body: { action },
-      })
-    },
     getLinuxPasswordAudits(filters = {}) {
       return requestJson({
         token,
