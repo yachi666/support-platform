@@ -39,6 +39,7 @@ test.describe('route guard', () => {
       { pageCode: 'teams', authRequired: false },
       { pageCode: 'import-export', authRequired: false },
       { pageCode: 'validation', authRequired: false },
+      { pageCode: 'linux-passwords', authRequired: false },
     ])
 
     await gotoApp(page, '/workspace?wy=2027&wm=5&wtz=UTC')
@@ -70,6 +71,7 @@ test.describe('route guard', () => {
       { pageCode: 'teams', authRequired: false },
       { pageCode: 'import-export', authRequired: false },
       { pageCode: 'validation', authRequired: false },
+      { pageCode: 'linux-passwords', authRequired: true },
     ])
 
     await gotoApp(page, '/workspace?wy=2028&wm=7&wtz=UTC')

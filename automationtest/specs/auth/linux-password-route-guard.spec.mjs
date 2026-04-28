@@ -56,4 +56,21 @@ test.describe('linux password route guard', () => {
 
     await expect(page.getByRole('heading', { name: /Linux 密码库|Linux Password Vault/ })).toBeVisible()
   })
+
+  test('unauthenticated user is redirected to login when accessing the audit route', async ({ page }) => {
+    await gotoApp(page, '/linux-passwords/audits')
+
+    await expect
+      .poll(() => {
+        const currentUrl = new URL(page.url())
+        return {
+          pathname: currentUrl.pathname,
+          redirect: currentUrl.searchParams.get('redirect'),
+        }
+      })
+      .toEqual({
+        pathname: '/login',
+        redirect: '/linux-passwords/audits',
+      })
+  })
 })

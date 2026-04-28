@@ -88,7 +88,7 @@ export async function seedMissingPrimaryCoverageScenario({ cleanupRegistry, work
   const runId = buildRunId()
   const targetMonth = pickFutureMonth(runId.replace(/\D/g, '').slice(-6))
   const teamName = `${VALIDATION_SCENARIO_PREFIX} ${runId}`
-  const staffCode = `ATV${String(Date.now()).slice(-8)}${Math.floor(Math.random() * 10)}`
+  const staffId = `ATV${String(Date.now()).slice(-8)}${Math.floor(Math.random() * 10)}`
   const supportShiftCode = `AT-S-${runId.slice(-6).toUpperCase()}`
   const primaryShiftCode = `AT-P-${runId.slice(-6).toUpperCase()}`
 
@@ -102,9 +102,9 @@ export async function seedMissingPrimaryCoverageScenario({ cleanupRegistry, work
   cleanupRegistry.add(`delete-team-${team.id}`, withCleanupGuard(() => workspaceApi.deleteTeam(team.id)))
 
   const staff = await workspaceApi.createStaff({
-    staffCode,
+    staffId,
     name: `Validation Seed ${runId.slice(-4)}`,
-    email: `${staffCode.toLowerCase()}@example.test`,
+    email: `${staffId.toLowerCase()}@example.test`,
     region: 'Automation',
     timezone: 'UTC',
     roleName: 'QA Seed',
@@ -197,7 +197,7 @@ export async function seedValidationCleanupScenario({ cleanupRegistry, workspace
   const orphanStaffId = buildSyntheticId(runId, 4)
 
   const account = await queryOne(
-    `select id from workspace_account where deleted = 0 and staff_code = '${escapeSqlLiteral(primaryUser.staffId)}' limit 1`,
+    `select id from workspace_account where deleted = 0 and staff_id = '${escapeSqlLiteral(primaryUser.staffId)}' limit 1`,
     ['id'],
   )
 
@@ -447,25 +447,25 @@ export async function seedRosterSearchScenario({ cleanupRegistry, workspaceApi }
   const staffDefinitions = [
     {
       teamId: hiddenTeam.id,
-      staffCode: `ATRH${String(Date.now()).slice(-6)}1`,
+      staffId: `ATRH${String(Date.now()).slice(-6)}1`,
       name: `Zed Hidden ${runId.slice(-4)}`,
       roleName: `NeedleRole ${runId.slice(-4)}`,
     },
     {
       teamId: hiddenTeam.id,
-      staffCode: `ATRH${String(Date.now()).slice(-6)}2`,
+      staffId: `ATRH${String(Date.now()).slice(-6)}2`,
       name: `Aaron Hidden ${runId.slice(-4)}`,
       roleName: 'Roster Seed',
     },
     {
       teamId: hiddenTeam.id,
-      staffCode: `ATRH${String(Date.now()).slice(-6)}3`,
+      staffId: `ATRH${String(Date.now()).slice(-6)}3`,
       name: `Joanna NeedleName ${runId.slice(-4)}`,
       roleName: 'Roster Seed',
     },
     {
       teamId: visibleTeam.id,
-      staffCode: `ATRV${String(Date.now()).slice(-6)}4`,
+      staffId: `ATRV${String(Date.now()).slice(-6)}4`,
       name: `Bella Visible ${runId.slice(-4)}`,
       roleName: 'Visible Team Seed',
     },
@@ -474,9 +474,9 @@ export async function seedRosterSearchScenario({ cleanupRegistry, workspaceApi }
   const createdStaff = []
   for (const definition of staffDefinitions) {
     const staff = await workspaceApi.createStaff({
-      staffCode: definition.staffCode,
+      staffId: definition.staffId,
       name: definition.name,
-      email: `${definition.staffCode.toLowerCase()}@example.test`,
+      email: `${definition.staffId.toLowerCase()}@example.test`,
       region: 'Automation',
       timezone: 'UTC',
       roleName: definition.roleName,

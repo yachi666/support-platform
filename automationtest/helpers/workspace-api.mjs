@@ -142,5 +142,24 @@ export async function createWorkspaceApiClient(credentials = requirePrimaryUser(
         body: payload,
       })
     },
+    getLinuxPasswords(options = {}) {
+      return requestJson({
+        token,
+        method: 'GET',
+        path: '/workspace/linux-passwords',
+        query: {
+          search: options.search || undefined,
+          businessUnit: options.businessUnit || undefined,
+        },
+      })
+    },
+    getLinuxPasswordAudits(filters = {}) {
+      return requestJson({
+        token,
+        method: 'GET',
+        path: '/workspace/linux-passwords/access-audits',
+        query: filters,
+      })
+    },
   }
 }
