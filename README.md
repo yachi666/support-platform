@@ -15,8 +15,8 @@ It is designed for teams that need to publish on-call coverage, manage roster da
 
 | Component | Path | Purpose |
 |-----------|------|---------|
-| Support Roster Server | [`support-roster-server/`](./support-roster-server/) | Spring Boot backend for viewer APIs, workspace APIs, authentication, validation, imports, and PostgreSQL persistence. |
-| Support Roster UI | [`support-roster-ui/`](./support-roster-ui/) | Vue 3 SPA for the public roster viewer, admin workspace, contact information, product updates, and protected tools. |
+| Support Roster Server | [`support-roster-server/`](https://github.com/yachi666/support-roster-server) | Spring Boot backend for viewer APIs, workspace APIs, authentication, validation, imports, and PostgreSQL persistence. |
+| Support Roster UI | [`support-roster-ui/`](https://github.com/yachi666/support-roster-ui) | Vue 3 SPA for the public roster viewer, admin workspace, contact information, product updates, and protected tools. |
 | Automation Test | [`automationtest/`](./automationtest/) | Playwright smoke and regression tests for login, route guards, workspace pages, permissions, and validation flows. |
 | Development Scripts | [`scripts/dev/`](./scripts/dev/) | Local orchestration scripts for starting, stopping, restarting, and health-checking the backend and frontend. |
 

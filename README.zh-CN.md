@@ -15,8 +15,8 @@ Support Platform 是支持排班系统的父级工作区，组合了 Spring Boot
 
 | 组件 | 路径 | 说明 |
 |------|------|------|
-| Support Roster Server | [`support-roster-server/`](./support-roster-server/) | Spring Boot 后端，提供 viewer API、workspace API、认证、校验、导入和 PostgreSQL 持久化。 |
-| Support Roster UI | [`support-roster-ui/`](./support-roster-ui/) | Vue 3 SPA，承载公开排班看板、管理工作台、联系信息、产品更新和受保护工具页。 |
+| Support Roster Server | [`support-roster-server/`](https://github.com/yachi666/support-roster-server) | Spring Boot 后端，提供 viewer API、workspace API、认证、校验、导入和 PostgreSQL 持久化。 |
+| Support Roster UI | [`support-roster-ui/`](https://github.com/yachi666/support-roster-ui) | Vue 3 SPA，承载公开排班看板、管理工作台、联系信息、产品更新和受保护工具页。 |
 | Automation Test | [`automationtest/`](./automationtest/) | Playwright 冒烟与回归测试，覆盖登录、路由守卫、工作台页面、权限和校验流程。 |
 | Development Scripts | [`scripts/dev/`](./scripts/dev/) | 本地前后端启动、停止、重启和健康检查脚本。 |
 
