@@ -97,15 +97,27 @@ export class ValidationPage {
     await expect(dialog).toBeVisible()
     await expect(dialog).toContainText(issue.type)
     await expect(dialog.getByText(String(issue.remediation.recordCount), { exact: true })).toBeVisible()
-    await expect(dialog.getByText(new RegExp(String(issue.remediation.recordId)))).toBeVisible()
+    await expect(dialog.getByText(new RegExp(String(issue.remediation.recordId))).first()).toBeVisible()
+  }
+
+  async expectRemediationRecordDetails(record) {
+    const dialog = this.page.getByRole('dialog', { name: /^(确认清理动作|Review cleanup action)$/ })
+    await expect(dialog).toContainText(record.title)
+    await expect(dialog).toContainText(record.subtitle)
+  }
+
+  async closeRemediationPreview() {
+    await this.page.keyboard.press('Escape')
   }
 
   async confirmRemediation() {
     await this.page.getByRole('button', { name: /^(delete records?|删除记录)$/i }).click()
   }
 
-  async expectCleanupSuccessToast() {
-    await expect(this.page.getByText(/removed 1 invalid record|已通过校验清理删除 1 条无效记录/i)).toBeVisible()
+  async expectCleanupSuccessToast({ count = 1 } = {}) {
+    await expect(
+      this.page.getByText(new RegExp(`(removed ${count} invalid records?|已通过校验清理删除 ${count} 条无效记录)`, 'i')),
+    ).toBeVisible()
   }
 
   async expectEmptyInbox() {

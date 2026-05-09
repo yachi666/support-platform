@@ -297,6 +297,10 @@ export async function seedValidationCleanupScenario({ cleanupRegistry, workspace
           recordCount: 1,
           recordId: orphanAssignmentId,
         },
+        previewRecord: {
+          title: `Unknown staff #${orphanStaffId}`,
+          subtitle: `${team.name} · ${targetMonth.year}-${String(targetMonth.month).padStart(2, '0')}-${String(targetMonth.day).padStart(2, '0')} · ${primaryShift.code}`,
+        },
       },
       invalidTeamScope: {
         type: 'Invalid Team Scope',
@@ -310,6 +314,10 @@ export async function seedValidationCleanupScenario({ cleanupRegistry, workspace
           actionKey: 'delete_invalid_team_scope',
           recordCount: 1,
           recordId: invalidScopeId,
+        },
+        previewRecord: {
+          title: requirePrimaryUser().staffId,
+          subtitle: `Missing team ID ${invalidTeamId}`,
         },
       },
     },
