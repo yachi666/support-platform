@@ -88,13 +88,6 @@ export class RosterPage {
     }
   }
 
-  async expectFocusedRosterCell({ staffName, day }) {
-    const row = this.page.locator('tr').filter({ hasText: staffName }).first()
-    await expect(row).toBeVisible()
-    const cell = row.locator(`[data-roster-day="${day}"]`).first()
-    await expect(cell).toBeVisible()
-  }
-
   async expectFocusedRosterRoute({ staffId, day }) {
     await expect.poll(() => {
       const url = new URL(this.page.url())
