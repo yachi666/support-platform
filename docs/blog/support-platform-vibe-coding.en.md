@@ -1,4 +1,4 @@
-# 🛡️ Support Platform: Building an On-Call Roster Platform
+# 🛡️ Vibe Coding in Practice: Building Support Platform for On-Call Rosters
 
 > From “Who is on support today?” to “Open the dashboard”: a lightweight product story for teams that run recurring support rotations.
 
