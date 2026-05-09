@@ -108,7 +108,7 @@ test.describe('workspace validation regression', () => {
     await validationPage.expectEmptyInbox()
   })
 
-  test('validation page enables bulk actions for cleanup issues and opens exact related records', async ({
+  test('validation page enables bulk actions for cleanup issues and opens related destinations', async ({
     authenticatedPage,
     cleanupRegistry,
     workspaceApi,
@@ -137,18 +137,20 @@ test.describe('workspace validation regression', () => {
     await validationPage.gotoWithQuery(navigationScenario.routeQuery)
     await validationPage.expectLoaded()
 
-    await validationPage.openRelatedArea(navigationScenario.expectedIssues.staffIssue.type)
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.staffIssue)
     await staffPage.expectFocusedStaff(navigationScenario.staff.name)
 
     await validationPage.gotoWithQuery(navigationScenario.routeQuery)
-    await validationPage.openRelatedArea(navigationScenario.expectedIssues.shiftIssue.type)
-    await shiftsPage.expectFocusedShift(navigationScenario.shift.code)
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.shiftIssue)
+    await shiftsPage.expectFocusedShiftRoute(navigationScenario.shift.id)
+    await shiftsPage.expectLoadError()
 
     await validationPage.gotoWithQuery(navigationScenario.routeQuery)
-    await validationPage.openRelatedArea(navigationScenario.expectedIssues.rosterIssue.type)
-    await rosterPage.expectFocusedRosterCell({
-      staffName: navigationScenario.staff.name,
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.rosterIssue)
+    await rosterPage.expectFocusedRosterRoute({
+      staffId: navigationScenario.staff.id,
       day: navigationScenario.expectedIssues.rosterIssue.focusDay,
     })
+    await rosterPage.expectValidationWarning(navigationScenario.expectedIssues.rosterIssue.description)
   })
 })

@@ -8,10 +8,27 @@ export class ValidationPage {
     this.page = page
   }
 
-  issueCard(issueType) {
-    return this.page.locator('article').filter({
-      has: this.page.getByRole('heading', { name: issueType, exact: true }),
-    }).first()
+  issueCard(issueOrType) {
+    const issue = typeof issueOrType === 'string' ? { type: issueOrType } : issueOrType
+    let card = this.page.locator('article').filter({
+      has: this.page.getByRole('heading', { name: issue.type, exact: true }),
+    })
+
+    const teamName = issue.teamName ?? issue.team
+    if (teamName && teamName !== '-') {
+      card = card.filter({ hasText: teamName })
+    }
+
+    const dateLabel = issue.dateLabel ?? issue.date
+    if (dateLabel && dateLabel !== '-') {
+      card = card.filter({ hasText: dateLabel })
+    }
+
+    if (issue.description) {
+      card = card.filter({ hasText: issue.description })
+    }
+
+    return card.first()
   }
 
   async goto() {
@@ -33,7 +50,7 @@ export class ValidationPage {
   }
 
   async expectIssueVisible(issue) {
-    const card = this.issueCard(issue.type)
+    const card = this.issueCard(issue)
 
     await expect(card).toBeVisible()
     await expect(card.getByText(issue.type, { exact: true })).toBeVisible()
@@ -66,8 +83,8 @@ export class ValidationPage {
     await expect(this.page.getByText(new RegExp(`(^${count} selected$|^${count} 条已选$)`))).toBeVisible()
   }
 
-  async openFixNow(issueType) {
-    await this.issueCard(issueType).getByRole('button', { name: /^(Fix now|立即修复)$/ }).click()
+  async openFixNow(issueOrType) {
+    await this.issueCard(issueOrType).getByRole('button', { name: /^(Fix now|立即修复)$/ }).click()
   }
 
   async expectIssueCount(count) {
@@ -100,7 +117,7 @@ export class ValidationPage {
     await expect(this.page.getByRole('button', { name: /^(Resolve Selected|解决所选)/ })).toBeEnabled()
   }
 
-  async openRelatedArea(issueType) {
-    await this.issueCard(issueType).getByRole('link', { name: /^(Open related area|打开相关区域)$/ }).click()
+  async openRelatedArea(issueOrType) {
+    await this.issueCard(issueOrType).getByRole('link', { name: /^(Open related area|打开相关区域)$/ }).click()
   }
 }

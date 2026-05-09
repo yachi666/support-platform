@@ -509,8 +509,13 @@ export async function seedRosterSearchScenario({ cleanupRegistry, workspaceApi }
 }
 
 export async function seedValidationNavigationScenario({ cleanupRegistry, workspaceApi }) {
+  if (!workspaceApi) {
+    throw new Error('workspaceApi is required for validation navigation seeding.')
+  }
+
   const runId = buildRunId()
   const targetMonth = pickFutureMonth(runId.replace(/\D/g, '').slice(-6))
+  const overlappingAssignmentId = buildSyntheticId(runId, 30)
 
   const team = await workspaceApi.createTeam({
     name: `${VALIDATION_SCENARIO_PREFIX} NAV ${runId}`,
@@ -548,14 +553,88 @@ export async function seedValidationNavigationScenario({ cleanupRegistry, worksp
   })
   cleanupRegistry.add(`delete-shift-${shift.id}`, withCleanupGuard(() => workspaceApi.deleteShiftDefinition(shift.id)))
 
-  await workspaceApi.saveRoster({
-    year: targetMonth.year,
-    month: targetMonth.month,
-    updates: [{ staffId: staff.id, day: targetMonth.day, shiftCode: shift.code }],
+  const alternateTeam = await workspaceApi.createTeam({
+    name: `${VALIDATION_SCENARIO_PREFIX} NAV ALT ${runId}`,
+    color: '#1d4ed8',
+    displayOrder: 1006,
+    visible: true,
+    description: 'Automation alternate team for validation navigation regression.',
   })
+  cleanupRegistry.add(
+    `delete-team-${alternateTeam.id}`,
+    withCleanupGuard(() => workspaceApi.deleteTeam(alternateTeam.id)),
+  )
+
+  const overlapShift = await workspaceApi.createShiftDefinition({
+    teamIds: [alternateTeam.id],
+    code: `AT-NAV-ALT-${runId.slice(-4).toUpperCase()}`,
+    meaning: 'Automation navigation overlap shift',
+    startTime: '13:00:00',
+    durationMinutes: 240,
+    timezone: 'UTC',
+    primaryShift: false,
+    visible: true,
+    colorHex: '#1d4ed8',
+    remark: 'Automation navigation overlap seed shift.',
+  })
+  cleanupRegistry.add(
+    `delete-shift-${overlapShift.id}`,
+    withCleanupGuard(() => workspaceApi.deleteShiftDefinition(overlapShift.id)),
+  )
+
+  cleanupRegistry.add(
+    `delete-overlap-assignment-${overlappingAssignmentId}`,
+    () => executeSql(`delete from workspace_roster_assignment where id = ${overlappingAssignmentId};`),
+  )
+
+  await executeSql(`
+    begin;
+    update workspace_staff
+    set timezone = ''
+    where id = ${staff.id};
+    update workspace_shift_definition
+    set duration_minutes = 0
+    where id = ${shift.id};
+    insert into workspace_roster_assignment (
+      id,
+      staff_id,
+      role_group_id,
+      team_id,
+      shift_definition_id,
+      assignment_date,
+      shift_code,
+      source_type,
+      notes,
+      deleted
+    ) values (
+      ${overlappingAssignmentId},
+      ${staff.id},
+      null,
+      ${team.id},
+      ${overlapShift.id},
+      date '${targetMonth.year}-${String(targetMonth.month).padStart(2, '0')}-${String(targetMonth.day).padStart(2, '0')}',
+      '${escapeSqlLiteral(overlapShift.code)}',
+      'MANUAL',
+      'Automation validation navigation overlap seed.',
+      0
+    );
+    commit;
+  `)
 
   const validation = await workspaceApi.getValidation(targetMonth.year, targetMonth.month)
   const issues = validation?.issues ?? []
+  const expectedIssues = {
+    staffIssue: issues.find((issue) => issue.targetPage === '/workspace/staff' && String(issue.staffRecordId) === String(staff.id)),
+    shiftIssue: issues.find((issue) => issue.targetPage === '/workspace/shifts' && String(issue.shiftDefinitionId) === String(shift.id)),
+    rosterIssue: issues.find((issue) => issue.targetPage === '/workspace/roster' && String(issue.staffRecordId) === String(staff.id) && Number(issue.focusDay) === targetMonth.day),
+  }
+
+  const missingIssueTypes = Object.entries(expectedIssues)
+    .filter(([, issue]) => !issue)
+    .map(([key]) => key)
+  if (missingIssueTypes.length > 0) {
+    throw new Error(`Validation navigation seed did not produce expected issues: ${missingIssueTypes.join(', ')}. Issues: ${JSON.stringify(issues)}`)
+  }
 
   return {
     runId,
@@ -563,11 +642,6 @@ export async function seedValidationNavigationScenario({ cleanupRegistry, worksp
     routeQuery: buildWorkspaceQuery(targetMonth),
     staff,
     shift,
-    expectedIssues: {
-      staffIssue: issues.find((issue) => issue.targetPage === '/workspace/staff' && String(issue.staffRecordId) === String(staff.id)),
-      shiftIssue: issues.find((issue) => issue.targetPage === '/workspace/shifts' && String(issue.shiftDefinitionId) === String(shift.id)),
-      rosterIssue: issues.find((issue) => issue.targetPage === '/workspace/roster' && String(issue.staffRecordId) === String(staff.id) && Number(issue.focusDay) === targetMonth.day),
-    },
+    expectedIssues,
   }
 }
-
