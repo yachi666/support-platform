@@ -34,8 +34,10 @@ test.describe('workspace export / shift / viewer regression', () => {
     const longShiftRow = authenticatedPage.locator(
       `[data-workspace-shift-id="${scenario.longShift.id}"]`,
     )
+    const longShiftCodeChip = longShiftRow.getByText(scenario.longShift.code, { exact: true })
     await expect(longShiftRow).toBeVisible()
-    await longShiftRow.getByTitle(scenario.longShift.code).click()
+    await expect(longShiftCodeChip).toBeVisible()
+    await longShiftCodeChip.click()
     await shiftsPage.expectShiftDrawerVisible(scenario.longShift.code)
 
     await viewerPage.gotoDate(scenario.viewerDate)
