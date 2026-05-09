@@ -6,6 +6,12 @@ export class ShiftDefinitionsPage {
     this.page = page
   }
 
+  shiftRow(code) {
+    return this.page.locator('[data-workspace-shift-id]').filter({
+      has: this.page.getByText(code, { exact: true }),
+    }).first()
+  }
+
   async gotoWithQuery(query = '') {
     await gotoApp(this.page, `/workspace/shifts${query}`)
   }
@@ -15,6 +21,26 @@ export class ShiftDefinitionsPage {
       const url = new URL(this.page.url())
       return url.searchParams.get('focusShiftId')
     }).toBe(String(shiftId))
+  }
+
+  async expectFocusedShift(code) {
+    const row = this.shiftRow(code)
+    await expect(row).toBeVisible()
+    await expect(row).toHaveClass(/bg-amber-50/)
+  }
+
+  async openShift(code) {
+    const row = this.shiftRow(code)
+    const shiftCodeChip = row.getByText(code, { exact: true })
+    const dialog = this.page.getByRole('dialog')
+
+    if (await dialog.isVisible().catch(() => false)) {
+      await this.page.getByRole('button', { name: /^(Close drawer|关闭抽屉)$/ }).click()
+      await expect(dialog).toBeHidden()
+    }
+
+    await expect(shiftCodeChip).toBeVisible()
+    await shiftCodeChip.click()
   }
 
   async expectShiftDrawerVisible(code) {

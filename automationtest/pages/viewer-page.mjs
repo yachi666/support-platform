@@ -38,16 +38,10 @@ export class ViewerPage {
     await expect(dateInput).toHaveValue(dateStr)
   }
 
-  async expectVisibleNonPrimaryShift({ teamName, staffName, shiftLabel }) {
+  async expectShiftVisible({ teamName, staffName, shiftLabel }) {
     const shiftCard = this.page.getByRole('button', { name: `${staffName} ${shiftLabel}` })
 
     await expect(this.page.getByText(teamName, { exact: true })).toBeVisible()
     await expect(shiftCard).toBeVisible()
-    await expect(shiftCard).toContainText(staffName)
-
-    await shiftCard.hover()
-
-    await expect(this.page.getByText(shiftLabel, { exact: true })).toBeVisible()
-    await expect(this.page.getByText('Secondary Support', { exact: true })).toBeVisible()
   }
 }

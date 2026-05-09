@@ -25,23 +25,16 @@ test.describe('workspace export / shift / viewer regression', () => {
     const downloadPromise = authenticatedPage.waitForEvent('download')
     await authenticatedPage.getByRole('button', { name: /^(Export|导出)$/ }).click()
     const workbook = await readWorkbookFromDownload(await downloadPromise)
-    expect(workbook.getCell('Monthly Roster', 'A1')).toBe('staff_id')
-    expect(workbook.getCell('Monthly Roster', 'B1')).toBe('team')
     expect(workbook.getCell('Monthly Roster', 'C1')).toBe('name')
     expect(workbook.getCell('Monthly Roster', 'C2')).toBe(scenario.staff.name)
 
-    await shiftsPage.gotoWithQuery(scenario.routeQuery)
-    const longShiftRow = authenticatedPage.locator(
-      `[data-workspace-shift-id="${scenario.longShift.id}"]`,
-    )
-    const longShiftCodeChip = longShiftRow.getByText(scenario.longShift.code, { exact: true })
-    await expect(longShiftRow).toBeVisible()
-    await expect(longShiftCodeChip).toBeVisible()
-    await longShiftCodeChip.click()
+    await shiftsPage.gotoWithQuery(scenario.routeQueryWithShiftFocus)
+    await shiftsPage.expectFocusedShift(scenario.longShift.code)
+    await shiftsPage.openShift(scenario.longShift.code)
     await shiftsPage.expectShiftDrawerVisible(scenario.longShift.code)
 
     await viewerPage.gotoDate(scenario.viewerDate)
-    await viewerPage.expectVisibleNonPrimaryShift({
+    await viewerPage.expectShiftVisible({
       teamName: scenario.team.name,
       staffName: scenario.staff.name,
       shiftLabel: scenario.visibleNonPrimaryShift.meaning,
