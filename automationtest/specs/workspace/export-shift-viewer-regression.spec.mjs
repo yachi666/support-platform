@@ -30,8 +30,12 @@ test.describe('workspace export / shift / viewer regression', () => {
     expect(workbook.getCell('Monthly Roster', 'C1')).toBe('name')
     expect(workbook.getCell('Monthly Roster', 'C2')).toBe(scenario.staff.name)
 
-    await shiftsPage.gotoWithQuery(scenario.routeQueryWithShiftFocus)
-    await shiftsPage.expectFocusedShift(scenario.longShift.code)
+    await shiftsPage.gotoWithQuery(scenario.routeQuery)
+    const longShiftRow = authenticatedPage.locator(
+      `[data-workspace-shift-id="${scenario.longShift.id}"]`,
+    )
+    await expect(longShiftRow).toBeVisible()
+    await longShiftRow.getByTitle(scenario.longShift.code).click()
     await shiftsPage.expectShiftDrawerVisible(scenario.longShift.code)
 
     await viewerPage.gotoDate(scenario.viewerDate)

@@ -703,7 +703,6 @@ export async function seedExportShiftViewerScenario({ cleanupRegistry, workspace
 
   return {
     routeQuery: buildWorkspaceQuery(targetMonth),
-    routeQueryWithShiftFocus: `${buildWorkspaceQuery(targetMonth)}&focusShiftId=${longShift.id}`,
     viewerDate: targetMonth,
     team,
     staff,

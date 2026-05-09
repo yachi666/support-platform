@@ -10,21 +10,11 @@ export class ShiftDefinitionsPage {
     await gotoApp(this.page, `/workspace/shifts${query}`)
   }
 
-  async expectFocusedShift(code) {
-    const row = this.page.locator('[data-workspace-shift-id].bg-amber-50').first()
-    await expect(row).toBeVisible()
-    await expect(row).toContainText(code)
-  }
-
   async expectFocusedShiftRoute(shiftId) {
     await expect.poll(() => {
       const url = new URL(this.page.url())
       return url.searchParams.get('focusShiftId')
     }).toBe(String(shiftId))
-  }
-
-  async openShift(code) {
-    await this.page.locator('tr').filter({ hasText: code }).first().click()
   }
 
   async expectShiftDrawerVisible(code) {
