@@ -653,3 +653,61 @@ export async function seedValidationNavigationScenario({ cleanupRegistry, worksp
     expectedIssues,
   }
 }
+
+export async function seedExportShiftViewerScenario({ cleanupRegistry, workspaceApi }) {
+  const runId = buildRunId()
+  const targetMonth = pickFutureMonth(runId.replace(/\D/g, '').slice(-6))
+  const longCode = `AUTOTEST-LONG-SHIFT-${runId.slice(-8).toUpperCase()}`
+
+  const team = await workspaceApi.createTeam({
+    name: `${ROSTER_SCENARIO_PREFIX} EXPORT ${runId}`,
+    color: '#1d4ed8',
+    displayOrder: 1006,
+    visible: true,
+    description: 'Automation export/viewer regression seed.',
+  })
+  cleanupRegistry.add(`delete-team-${team.id}`, withCleanupGuard(() => workspaceApi.deleteTeam(team.id)))
+
+  const staff = await workspaceApi.createStaff({
+    staffId: `ATEV${String(Date.now()).slice(-6)}`,
+    name: `Export Viewer ${runId.slice(-4)}`,
+    email: `export-viewer-${runId.slice(-4)}@example.test`,
+    region: 'Automation',
+    timezone: 'UTC',
+    roleName: 'QA Seed',
+    teamId: team.id,
+    status: 'Active',
+    notes: 'Automation export/viewer regression seed.',
+  })
+  cleanupRegistry.add(`delete-staff-${staff.id}`, withCleanupGuard(() => workspaceApi.deleteStaff(staff.id)))
+
+  const longShift = await workspaceApi.createShiftDefinition({
+    teamIds: [team.id],
+    code: longCode,
+    meaning: 'Long visible shift',
+    startTime: '10:00:00',
+    durationMinutes: 480,
+    timezone: 'UTC',
+    primaryShift: false,
+    visible: true,
+    colorHex: '#1d4ed8',
+    remark: 'Automation long-code regression seed.',
+  })
+  cleanupRegistry.add(`delete-shift-${longShift.id}`, withCleanupGuard(() => workspaceApi.deleteShiftDefinition(longShift.id)))
+
+  await workspaceApi.saveRoster({
+    year: targetMonth.year,
+    month: targetMonth.month,
+    updates: [{ staffId: staff.id, day: targetMonth.day, shiftCode: longShift.code }],
+  })
+
+  return {
+    routeQuery: buildWorkspaceQuery(targetMonth),
+    routeQueryWithShiftFocus: `${buildWorkspaceQuery(targetMonth)}&focusShiftId=${longShift.id}`,
+    viewerDate: targetMonth,
+    team,
+    staff,
+    longShift,
+    visibleNonPrimaryShift: longShift,
+  }
+}
