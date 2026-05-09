@@ -507,3 +507,67 @@ export async function seedRosterSearchScenario({ cleanupRegistry, workspaceApi }
     },
   }
 }
+
+export async function seedValidationNavigationScenario({ cleanupRegistry, workspaceApi }) {
+  const runId = buildRunId()
+  const targetMonth = pickFutureMonth(runId.replace(/\D/g, '').slice(-6))
+
+  const team = await workspaceApi.createTeam({
+    name: `${VALIDATION_SCENARIO_PREFIX} NAV ${runId}`,
+    color: '#0f766e',
+    displayOrder: 1005,
+    visible: true,
+    description: 'Automation navigation seed for validation jump regression.',
+  })
+  cleanupRegistry.add(`delete-team-${team.id}`, withCleanupGuard(() => workspaceApi.deleteTeam(team.id)))
+
+  const staff = await workspaceApi.createStaff({
+    staffId: `ATVN${String(Date.now()).slice(-6)}`,
+    name: `Validation Nav ${runId.slice(-4)}`,
+    email: `validation-nav-${runId.slice(-4)}@example.test`,
+    region: 'Automation',
+    timezone: 'UTC',
+    roleName: 'QA Seed',
+    teamId: team.id,
+    status: 'Active',
+    notes: 'Created by automation validation navigation regression.',
+  })
+  cleanupRegistry.add(`delete-staff-${staff.id}`, withCleanupGuard(() => workspaceApi.deleteStaff(staff.id)))
+
+  const shift = await workspaceApi.createShiftDefinition({
+    teamIds: [team.id],
+    code: `AT-NAV-${runId.slice(-4).toUpperCase()}`,
+    meaning: 'Automation navigation shift',
+    startTime: '09:00:00',
+    durationMinutes: 480,
+    timezone: 'UTC',
+    primaryShift: true,
+    visible: true,
+    colorHex: '#0f766e',
+    remark: 'Automation navigation seed shift.',
+  })
+  cleanupRegistry.add(`delete-shift-${shift.id}`, withCleanupGuard(() => workspaceApi.deleteShiftDefinition(shift.id)))
+
+  await workspaceApi.saveRoster({
+    year: targetMonth.year,
+    month: targetMonth.month,
+    updates: [{ staffId: staff.id, day: targetMonth.day, shiftCode: shift.code }],
+  })
+
+  const validation = await workspaceApi.getValidation(targetMonth.year, targetMonth.month)
+  const issues = validation?.issues ?? []
+
+  return {
+    runId,
+    query: targetMonth,
+    routeQuery: buildWorkspaceQuery(targetMonth),
+    staff,
+    shift,
+    expectedIssues: {
+      staffIssue: issues.find((issue) => issue.targetPage === '/workspace/staff' && String(issue.staffRecordId) === String(staff.id)),
+      shiftIssue: issues.find((issue) => issue.targetPage === '/workspace/shifts' && String(issue.shiftDefinitionId) === String(shift.id)),
+      rosterIssue: issues.find((issue) => issue.targetPage === '/workspace/roster' && String(issue.staffRecordId) === String(staff.id) && Number(issue.focusDay) === targetMonth.day),
+    },
+  }
+}
+

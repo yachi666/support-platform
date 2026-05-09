@@ -95,4 +95,12 @@ export class ValidationPage {
     await expect(this.page.getByText(/^(当前校验队列为空|Validation queue is currently clear)$/)).toBeVisible()
     await expect(this.page.getByText(/^(当前筛选条件下没有匹配的校验问题。|No validation issues matched the current filter\.)$/)).toBeVisible()
   }
+
+  async expectBulkFixEnabled() {
+    await expect(this.page.getByRole('button', { name: /^(Resolve Selected|解决所选)/ })).toBeEnabled()
+  }
+
+  async openRelatedArea(issueType) {
+    await this.issueCard(issueType).getByRole('link', { name: /^(Open related area|打开相关区域)$/ }).click()
+  }
 }
