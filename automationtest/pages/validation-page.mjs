@@ -107,7 +107,9 @@ export class ValidationPage {
   }
 
   async closeRemediationPreview() {
+    const dialog = this.page.getByRole('dialog', { name: /^(确认清理动作|Review cleanup action)$/ })
     await this.page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
   }
 
   async confirmRemediation() {
