@@ -8,10 +8,27 @@ export class ValidationPage {
     this.page = page
   }
 
-  issueCard(issueType) {
-    return this.page.locator('article').filter({
-      has: this.page.getByRole('heading', { name: issueType, exact: true }),
-    }).first()
+  issueCard(issueOrType) {
+    const issue = typeof issueOrType === 'string' ? { type: issueOrType } : issueOrType
+    let card = this.page.locator('article').filter({
+      has: this.page.getByRole('heading', { name: issue.type, exact: true }),
+    })
+
+    const teamName = issue.teamName ?? issue.team
+    if (teamName && teamName !== '-') {
+      card = card.filter({ hasText: teamName })
+    }
+
+    const dateLabel = issue.dateLabel ?? issue.date
+    if (dateLabel && dateLabel !== '-') {
+      card = card.filter({ hasText: dateLabel })
+    }
+
+    if (issue.description) {
+      card = card.filter({ hasText: issue.description })
+    }
+
+    return card.first()
   }
 
   async goto() {
@@ -33,7 +50,7 @@ export class ValidationPage {
   }
 
   async expectIssueVisible(issue) {
-    const card = this.issueCard(issue.type)
+    const card = this.issueCard(issue)
 
     await expect(card).toBeVisible()
     await expect(card.getByText(issue.type, { exact: true })).toBeVisible()
@@ -66,8 +83,8 @@ export class ValidationPage {
     await expect(this.page.getByText(new RegExp(`(^${count} selected$|^${count} 条已选$)`))).toBeVisible()
   }
 
-  async openFixNow(issueType) {
-    await this.issueCard(issueType).getByRole('button', { name: /^(Fix now|立即修复)$/ }).click()
+  async openFixNow(issueOrType) {
+    await this.issueCard(issueOrType).getByRole('button', { name: /^(Fix now|立即修复)$/ }).click()
   }
 
   async expectIssueCount(count) {
@@ -80,19 +97,41 @@ export class ValidationPage {
     await expect(dialog).toBeVisible()
     await expect(dialog).toContainText(issue.type)
     await expect(dialog.getByText(String(issue.remediation.recordCount), { exact: true })).toBeVisible()
-    await expect(dialog.getByText(new RegExp(String(issue.remediation.recordId)))).toBeVisible()
+    await expect(dialog.getByText(new RegExp(String(issue.remediation.recordId))).first()).toBeVisible()
+  }
+
+  async expectRemediationRecordDetails(record) {
+    const dialog = this.page.getByRole('dialog', { name: /^(确认清理动作|Review cleanup action)$/ })
+    await expect(dialog).toContainText(record.title)
+    await expect(dialog).toContainText(record.subtitle)
+  }
+
+  async closeRemediationPreview() {
+    const dialog = this.page.getByRole('dialog', { name: /^(确认清理动作|Review cleanup action)$/ })
+    await this.page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
   }
 
   async confirmRemediation() {
     await this.page.getByRole('button', { name: /^(delete records?|删除记录)$/i }).click()
   }
 
-  async expectCleanupSuccessToast() {
-    await expect(this.page.getByText(/removed 1 invalid record|已通过校验清理删除 1 条无效记录/i)).toBeVisible()
+  async expectCleanupSuccessToast({ count = 1 } = {}) {
+    await expect(
+      this.page.getByText(new RegExp(`(removed ${count} invalid records?|已通过校验清理删除 ${count} 条无效记录)`, 'i')),
+    ).toBeVisible()
   }
 
   async expectEmptyInbox() {
     await expect(this.page.getByText(/^(当前校验队列为空|Validation queue is currently clear)$/)).toBeVisible()
     await expect(this.page.getByText(/^(当前筛选条件下没有匹配的校验问题。|No validation issues matched the current filter\.)$/)).toBeVisible()
+  }
+
+  async expectBulkFixEnabled() {
+    await expect(this.page.getByRole('button', { name: /^(Resolve Selected|解决所选)/ })).toBeEnabled()
+  }
+
+  async openRelatedArea(issueOrType) {
+    await this.issueCard(issueOrType).getByRole('link', { name: /^(Open related area|打开相关区域)$/ }).click()
   }
 }

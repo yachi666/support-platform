@@ -82,4 +82,57 @@ test.describe('workspace validation cleanup regression', () => {
 
     await validationPage.expectEmptyInbox()
   })
+
+  test('system cleanup issues show record details and support bulk cleanup from validation center', async ({
+    authenticatedPage,
+    cleanupRegistry,
+    workspaceApi,
+  }) => {
+    const validationPage = new ValidationPage(authenticatedPage)
+    const scenario = await seedValidationCleanupScenario({
+      cleanupRegistry,
+      workspaceApi,
+    })
+
+    await validationPage.gotoWithQuery(scenario.routeQuery)
+    await validationPage.expectLoaded()
+
+    await expect.poll(async () => {
+      const response = await workspaceApi.getValidation(scenario.query.year, scenario.query.month)
+      return summarizeCleanupIssues(response, scenario)
+    }).toEqual({
+      total: 2,
+      blocking: 1,
+      orphanVisible: true,
+      invalidTeamScopeVisible: true,
+    })
+
+    await validationPage.expectIssueVisible(scenario.expectedIssues.orphanAssignment)
+    await validationPage.expectIssueVisible(scenario.expectedIssues.invalidTeamScope)
+
+    await validationPage.openFixNow(scenario.expectedIssues.orphanAssignment.type)
+    await validationPage.expectRemediationRecordDetails(
+      scenario.expectedIssues.orphanAssignment.previewRecord,
+    )
+    await validationPage.closeRemediationPreview()
+
+    await validationPage.selectVisibleIssues()
+    await validationPage.expectSelectedCount(2)
+    await validationPage.expectBulkFixEnabled()
+    await validationPage.resolveSelectedIssues()
+    await validationPage.confirmRemediation()
+    await validationPage.expectCleanupSuccessToast({ count: 2 })
+
+    await expect.poll(async () => {
+      const response = await workspaceApi.getValidation(scenario.query.year, scenario.query.month)
+      return summarizeCleanupIssues(response, scenario)
+    }).toEqual({
+      total: 0,
+      blocking: 0,
+      orphanVisible: false,
+      invalidTeamScopeVisible: false,
+    })
+
+    await validationPage.expectEmptyInbox()
+  })
 })

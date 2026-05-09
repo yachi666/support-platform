@@ -87,4 +87,17 @@ export class RosterPage {
       previousY = box.y
     }
   }
+
+  async expectFocusedRosterRoute({ staffId, day }) {
+    await expect.poll(() => {
+      const url = new URL(this.page.url())
+      return {
+        focusStaffId: url.searchParams.get('focusStaffId'),
+        focusDay: url.searchParams.get('focusDay'),
+      }
+    }).toEqual({
+      focusStaffId: String(staffId),
+      focusDay: String(day),
+    })
+  }
 }

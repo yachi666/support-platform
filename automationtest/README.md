@@ -12,7 +12,8 @@ Reusable Playwright automation for the support roster platform. This project liv
 | Workspace smoke | Core workspace pages load for an authenticated user. |
 | Permissions | Admin-only navigation and route access checks. |
 | Contact information | Public list/search and admin create flows. |
-| Validation regressions | Missing primary coverage, invalid references, cleanup confirmation, and validation recompute flows. |
+| Validation regressions | Missing primary coverage, bulk actions, exact jump navigation, cleanup confirmation, and validation recompute flows. |
+| Workspace export / viewer | Export workbook shape, shift-definition overflow behavior, and visible non-primary viewer shifts. |
 | Linux passwords | Protected route guard and smoke coverage for the Linux password page. |
 | Roster regressions | Browser coverage for roster planning behavior. |
 
@@ -107,6 +108,7 @@ specs/contact-information/admin-create.spec.mjs
 specs/contact-information/public-list.spec.mjs
 specs/permissions/admin-route-access.spec.mjs
 specs/workspace/core-smoke.spec.mjs
+specs/workspace/export-shift-viewer-regression.spec.mjs
 specs/workspace/linux-passwords-smoke.spec.mjs
 specs/workspace/roster-regression.spec.mjs
 specs/workspace/validation-cleanup-regression.spec.mjs

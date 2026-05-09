@@ -12,7 +12,8 @@
 | 工作台冒烟 | 已认证用户可加载核心工作台页面。 |
 | 权限 | 管理员导航和受限路由访问。 |
 | 联系信息 | 公开列表/搜索和管理员创建流程。 |
-| 校验回归 | Missing primary coverage、失效引用、清理确认和校验重算流程。 |
+| 校验回归 | Missing primary coverage、批量操作、精确跳转导航、清理确认和校验重算流程。 |
+| 工作台导出 / 查看器 | 导出工作簿结构、班次定义溢出行为和可见非主班次查看器轮班。 |
 | Linux 密码 | Linux 密码页的路由保护和冒烟覆盖。 |
 | 排班回归 | 排班规划行为的浏览器回归覆盖。 |
 
@@ -107,6 +108,7 @@ specs/contact-information/admin-create.spec.mjs
 specs/contact-information/public-list.spec.mjs
 specs/permissions/admin-route-access.spec.mjs
 specs/workspace/core-smoke.spec.mjs
+specs/workspace/export-shift-viewer-regression.spec.mjs
 specs/workspace/linux-passwords-smoke.spec.mjs
 specs/workspace/roster-regression.spec.mjs
 specs/workspace/validation-cleanup-regression.spec.mjs

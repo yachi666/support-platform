@@ -1,10 +1,14 @@
 import { test, expect } from '../../fixtures/test.fixture.mjs'
 import {
   seedMissingPrimaryCoverageScenario,
+  seedValidationCleanupScenario,
   seedValidationImportIssueScenario,
+  seedValidationNavigationScenario,
 } from '../../helpers/seed-contracts.mjs'
 import { OverviewPage } from '../../pages/overview-page.mjs'
 import { RosterPage } from '../../pages/roster-page.mjs'
+import { ShiftDefinitionsPage } from '../../pages/shift-definitions-page.mjs'
+import { StaffDirectoryPage } from '../../pages/staff-directory-page.mjs'
 import { ValidationPage } from '../../pages/validation-page.mjs'
 import { WorkspaceShellPage } from '../../pages/workspace-shell-page.mjs'
 
@@ -102,5 +106,51 @@ test.describe('workspace validation regression', () => {
 
     await validationPage.expectIssueCount(0)
     await validationPage.expectEmptyInbox()
+  })
+
+  test('validation page enables bulk actions for cleanup issues and opens related destinations', async ({
+    authenticatedPage,
+    cleanupRegistry,
+    workspaceApi,
+  }) => {
+    const validationPage = new ValidationPage(authenticatedPage)
+    const rosterPage = new RosterPage(authenticatedPage)
+    const staffPage = new StaffDirectoryPage(authenticatedPage)
+    const shiftsPage = new ShiftDefinitionsPage(authenticatedPage)
+
+    const cleanupScenario = await seedValidationCleanupScenario({
+      cleanupRegistry,
+      workspaceApi,
+    })
+    const navigationScenario = await seedValidationNavigationScenario({
+      cleanupRegistry,
+      workspaceApi,
+    })
+
+    await validationPage.gotoWithQuery(cleanupScenario.routeQuery)
+    await validationPage.expectLoaded()
+    await validationPage.expectIssueVisible(cleanupScenario.expectedIssues.orphanAssignment)
+    await validationPage.expectIssueVisible(cleanupScenario.expectedIssues.invalidTeamScope)
+    await validationPage.selectVisibleIssues()
+    await validationPage.expectBulkFixEnabled()
+
+    await validationPage.gotoWithQuery(navigationScenario.routeQuery)
+    await validationPage.expectLoaded()
+
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.staffIssue)
+    await staffPage.expectFocusedStaff(navigationScenario.staff.name)
+
+    await validationPage.gotoWithQuery(navigationScenario.routeQuery)
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.shiftIssue)
+    await shiftsPage.expectFocusedShiftRoute(navigationScenario.shift.id)
+    await shiftsPage.expectLoadError()
+
+    await validationPage.gotoWithQuery(navigationScenario.routeQuery)
+    await validationPage.openRelatedArea(navigationScenario.expectedIssues.rosterIssue)
+    await rosterPage.expectFocusedRosterRoute({
+      staffId: navigationScenario.staff.id,
+      day: navigationScenario.expectedIssues.rosterIssue.focusDay,
+    })
+    await rosterPage.expectValidationWarning(navigationScenario.expectedIssues.rosterIssue.description)
   })
 })
