@@ -35,6 +35,10 @@ test.describe('workspace export / shift / viewer regression', () => {
     await shiftsPage.expectShiftDrawerVisible(scenario.longShift.code)
 
     await viewerPage.gotoDate(scenario.viewerDate)
-    await viewerPage.expectTeamVisible(scenario.team.name)
+    await viewerPage.expectVisibleNonPrimaryShift({
+      teamName: scenario.team.name,
+      staffName: scenario.staff.name,
+      shiftLabel: scenario.visibleNonPrimaryShift.meaning,
+    })
   })
 })
