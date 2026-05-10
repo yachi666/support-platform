@@ -9,3 +9,6 @@
 .playwright-cli/
 .spec/
 .trae/
+
+# Local planning artifacts generated during agent workflows
+docs/superpowers/plans/*.md
