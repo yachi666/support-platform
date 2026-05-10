@@ -122,13 +122,7 @@ The workspace already had usable data in PostgreSQL before browser testing:
 - 4 shift definitions
 - 16 roster assignments for March 2026
 
-Optional seed import command:
-
-```bash
-psql -d support -f test-data.sql
-```
-
-Note: rerunning the SQL may produce duplicate primary key errors if the seed data already exists.
+Historical note: this browser session originally used a local seed SQL file that has since been removed after the migration/test phase ended.
 
 ### Test data created during this browser session
 
@@ -157,7 +151,7 @@ psql -d support -c "SELECT staff_code, name, role_group_id FROM workspace_staff 
 - UI app: `support-roster-ui`
 - API app: `support-roster-server`
 - Sample import file: `support-roster-server/src/main/resources/roster.xlsx`
-- Seed SQL: `test-data.sql`
+- Seed SQL: historical local fixture (removed)
 
 ## Executed Test Cases
 
