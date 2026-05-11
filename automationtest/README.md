@@ -46,6 +46,14 @@ npm install
 npm run install:browsers
 ```
 
+For a brand-new local database, initialize the first admin before authenticated smoke tests:
+
+```bash
+./scripts/dev/init-admin.sh
+```
+
+The default bootstrap credential is `admin` / `admin` and is attached to a valid team so validation specs start from a clean baseline.
+
 ## Environment
 
 Copy `.env.example` to `.env` and adjust values when needed.
@@ -98,6 +106,15 @@ npm run test:ui
 npm run codegen
 ```
 
+Manual viewer data seeding:
+
+```bash
+npm run seed:viewer-month
+npm run cleanup:viewer-month
+```
+
+`seed:viewer-month` creates a dense current-month roster for the public viewer through workspace APIs and stores the latest cleanup manifest at `artifacts/manual-seeds/viewer-current-month-latest.json`.
+
 ## Current Specs
 
 ```text
@@ -131,6 +148,7 @@ Guidance:
 - Prefer public or workspace APIs for legal, user-reachable data states.
 - Use direct PostgreSQL seeding only for corruption regressions that normal APIs cannot create reliably.
 - Add cleanup registration at the same time as any seed creation.
+- For manual local viewer population, use `npm run seed:viewer-month`; it creates visible teams, staff, and shared shift definitions for every day of the current month and records cleanup IDs in `artifacts/manual-seeds/`.
 
 ## Troubleshooting
 

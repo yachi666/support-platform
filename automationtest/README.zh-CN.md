@@ -46,6 +46,14 @@ npm install
 npm run install:browsers
 ```
 
+如果是全新的本地数据库，在执行需要登录的冒烟测试前，先初始化首个管理员：
+
+```bash
+./scripts/dev/init-admin.sh
+```
+
+默认引导账号是 `admin` / `admin`，并且会绑定到一个有效团队，避免 validation 用例在空库首启时带入额外的基线问题。
+
 ## 环境变量
 
 复制 `.env.example` 为 `.env`，按需调整。
@@ -98,6 +106,15 @@ npm run test:ui
 npm run codegen
 ```
 
+手工填充 viewer 数据：
+
+```bash
+npm run seed:viewer-month
+npm run cleanup:viewer-month
+```
+
+`seed:viewer-month` 会通过 workspace API 为当前月创建一套密集 viewer 排班数据，并把最新清理清单写到 `artifacts/manual-seeds/viewer-current-month-latest.json`。
+
 ## 当前用例
 
 ```text
@@ -131,6 +148,7 @@ specs/workspace/validation-regression.spec.mjs
 - 合法且用户可触达的数据状态优先通过公开 API 或工作台 API 构造。
 - 只有正常 API 难以稳定制造的脏数据回归，才使用 PostgreSQL 直连建数。
 - 新增建数时同步注册清理步骤。
+- 需要手工填充本地 viewer 时，优先使用 `npm run seed:viewer-month`；它会为当前月每天创建可见团队、员工和共享班次定义，并把清理所需 ID 记录到 `artifacts/manual-seeds/`。
 
 ## 排查建议
 

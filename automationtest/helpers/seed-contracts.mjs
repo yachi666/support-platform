@@ -5,6 +5,48 @@ import { gotoApp } from './route-assertions.mjs'
 
 const VALIDATION_SCENARIO_PREFIX = 'AUTOTEST-VALIDATION'
 const ROSTER_SCENARIO_PREFIX = 'AUTOTEST-ROSTER'
+const VIEWER_SCENARIO_PREFIX = 'AUTOTEST-VIEWER-MONTH'
+
+const VIEWER_TEAM_BLUEPRINTS = [
+  { label: 'Core', color: '#2563eb' },
+  { label: 'Billing', color: '#7c3aed' },
+  { label: 'Incident', color: '#ea580c' },
+]
+
+const VIEWER_SHIFT_BLUEPRINTS = [
+  {
+    suffix: 'MORN',
+    meaning: 'Morning primary coverage',
+    startTime: '08:00:00',
+    durationMinutes: 600,
+    primaryShift: true,
+    colorHex: '#0f766e',
+  },
+  {
+    suffix: 'MID',
+    meaning: 'Midday coverage',
+    startTime: '10:00:00',
+    durationMinutes: 540,
+    primaryShift: false,
+    colorHex: '#2563eb',
+  },
+  {
+    suffix: 'EVE',
+    meaning: 'Evening coverage',
+    startTime: '12:00:00',
+    durationMinutes: 480,
+    primaryShift: false,
+    colorHex: '#7c3aed',
+  },
+  {
+    suffix: 'LATE',
+    meaning: 'Late coverage',
+    startTime: '14:00:00',
+    durationMinutes: 480,
+    primaryShift: false,
+    colorHex: '#ea580c',
+  },
+]
 
 export async function assertManualEnvironmentReady({ page }) {
   await gotoApp(page, '/login')
@@ -39,6 +81,22 @@ function pickFutureMonth(offsetSeed = Date.now()) {
     day: 11,
     timezone: 'UTC',
   }
+}
+
+function pickCurrentMonth(offsetMonths = 0) {
+  const reference = new Date()
+  const currentMonth = new Date(reference.getFullYear(), reference.getMonth() + offsetMonths, 1)
+
+  return {
+    year: currentMonth.getFullYear(),
+    month: currentMonth.getMonth() + 1,
+    day: Math.max(1, reference.getDate()),
+    timezone: 'UTC',
+  }
+}
+
+function getDaysInMonth(year, month) {
+  return new Date(year, month, 0).getDate()
 }
 
 function formatValidationDateLabel(year, month, day) {
@@ -709,5 +767,135 @@ export async function seedExportShiftViewerScenario({ cleanupRegistry, workspace
     staff,
     longShift,
     visibleNonPrimaryShift: longShift,
+  }
+}
+
+export async function seedCurrentMonthViewerScenario({
+  cleanupRegistry = null,
+  workspaceApi,
+  monthOffset = 0,
+  teamCount = VIEWER_TEAM_BLUEPRINTS.length,
+  staffPerTeam = VIEWER_SHIFT_BLUEPRINTS.length,
+}) {
+  if (!workspaceApi) {
+    throw new Error('workspaceApi is required for viewer month seeding.')
+  }
+
+  const runId = buildRunId()
+  const targetMonth = pickCurrentMonth(monthOffset)
+  const daysInMonth = getDaysInMonth(targetMonth.year, targetMonth.month)
+  const previewDay = Math.min(targetMonth.day, daysInMonth)
+  const baseSuffix = runId.replace(/\W/g, '').slice(-4).toUpperCase()
+  const createdTeams = []
+  const createdStaff = []
+
+  for (let index = 0; index < teamCount; index += 1) {
+    const blueprint = VIEWER_TEAM_BLUEPRINTS[index % VIEWER_TEAM_BLUEPRINTS.length]
+    const team = await workspaceApi.createTeam({
+      name: `${VIEWER_SCENARIO_PREFIX} ${blueprint.label} ${runId}`,
+      color: blueprint.color,
+      displayOrder: 1100 + index,
+      visible: true,
+      description: 'Automation current-month viewer seed.',
+    })
+    createdTeams.push(team)
+
+    if (cleanupRegistry) {
+      cleanupRegistry.add(`delete-team-${team.id}`, withCleanupGuard(() => workspaceApi.deleteTeam(team.id)))
+    }
+  }
+
+  const shiftDefinitions = []
+  for (const blueprint of VIEWER_SHIFT_BLUEPRINTS) {
+    const shift = await workspaceApi.createShiftDefinition({
+      teamIds: createdTeams.map((team) => team.id),
+      code: `ATVM-${baseSuffix}-${blueprint.suffix}`,
+      meaning: blueprint.meaning,
+      startTime: blueprint.startTime,
+      durationMinutes: blueprint.durationMinutes,
+      timezone: 'UTC',
+      primaryShift: blueprint.primaryShift,
+      visible: true,
+      colorHex: blueprint.colorHex,
+      remark: 'Automation current-month viewer seed.',
+    })
+    shiftDefinitions.push(shift)
+
+    if (cleanupRegistry) {
+      cleanupRegistry.add(`delete-shift-${shift.id}`, withCleanupGuard(() => workspaceApi.deleteShiftDefinition(shift.id)))
+    }
+  }
+
+  for (const [teamIndex, team] of createdTeams.entries()) {
+    for (let slotIndex = 0; slotIndex < staffPerTeam; slotIndex += 1) {
+      const staff = await workspaceApi.createStaff({
+        staffId: `ATVM${baseSuffix}${teamIndex}${slotIndex}`,
+        name: `Viewer ${VIEWER_TEAM_BLUEPRINTS[teamIndex % VIEWER_TEAM_BLUEPRINTS.length].label} ${slotIndex + 1} ${runId.slice(-4)}`,
+        email: `viewer-${baseSuffix.toLowerCase()}-${teamIndex}-${slotIndex}@example.test`,
+        region: 'Automation',
+        timezone: 'UTC',
+        roleName: 'Viewer Seed',
+        teamId: team.id,
+        status: 'Active',
+        notes: 'Automation current-month viewer seed.',
+      })
+      createdStaff.push({
+        ...staff,
+        teamId: team.id,
+        teamName: team.name,
+        teamIndex,
+        slotIndex,
+      })
+
+      if (cleanupRegistry) {
+        cleanupRegistry.add(`delete-staff-${staff.id}`, withCleanupGuard(() => workspaceApi.deleteStaff(staff.id)))
+      }
+    }
+  }
+
+  const updates = []
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    for (const staff of createdStaff) {
+      const rotationIndex = (day + staff.teamIndex + staff.slotIndex) % shiftDefinitions.length
+      const shift = shiftDefinitions[rotationIndex]
+      updates.push({
+        staffId: staff.id,
+        day,
+        shiftCode: shift.code,
+      })
+    }
+  }
+
+  await workspaceApi.saveRoster({
+    year: targetMonth.year,
+    month: targetMonth.month,
+    updates,
+  })
+
+  return {
+    runId,
+    query: targetMonth,
+    routeQuery: buildWorkspaceQuery(targetMonth),
+    viewerDate: {
+      year: targetMonth.year,
+      month: targetMonth.month,
+      day: previewDay,
+      timezone: 'UTC',
+    },
+    teams: createdTeams,
+    staff: createdStaff,
+    shiftDefinitions,
+    summary: {
+      teamCount: createdTeams.length,
+      staffCount: createdStaff.length,
+      shiftDefinitionCount: shiftDefinitions.length,
+      daysInMonth,
+      assignmentCount: updates.length,
+    },
+    cleanupManifest: {
+      teamIds: createdTeams.map((team) => team.id),
+      staffIds: createdStaff.map((staff) => staff.id),
+      shiftDefinitionIds: shiftDefinitions.map((shift) => shift.id),
+    },
   }
 }

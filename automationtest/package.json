@@ -8,6 +8,8 @@
   "scripts": {
     "restart:services": "../scripts/dev/restart-all.sh",
     "precheck": "node ./scripts/precheck.mjs",
+    "seed:viewer-month": "node ./scripts/seed-viewer-month.mjs",
+    "cleanup:viewer-month": "node ./scripts/cleanup-viewer-month.mjs",
     "test:raw": "playwright test",
     "test": "npm run restart:services && npm run precheck && npm run test:raw",
     "test:smoke:raw": "playwright test specs/auth specs/workspace specs/permissions",

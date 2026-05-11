@@ -12,6 +12,7 @@ Local orchestration scripts for the support roster workspace. Run all commands f
 | `./scripts/dev/start-frontend.sh` | Start `support-roster-ui` in the foreground. |
 | `./scripts/dev/stop-all.sh` | Stop tracked services and listeners on the default ports. |
 | `./scripts/dev/restart-all.sh` | Restart backend and frontend in the background, then wait for health checks. |
+| `./scripts/dev/init-admin.sh` | Initialize the first local admin account and assign it to a valid bootstrap team. |
 | `./scripts/dev/test-restart-all.sh` | Exercise the restart script behavior. |
 
 ## Recommended Entry Point
@@ -22,13 +23,14 @@ Local orchestration scripts for the support roster workspace. Run all commands f
 
 `restart-all.sh` is the preferred local development entry point. It:
 
-1. Parses `DB_URL` and verifies PostgreSQL readiness with `pg_isready`.
-2. Optionally starts Homebrew PostgreSQL when `START_LOCAL_POSTGRES_WITH_BREW=1`.
-3. Stops existing listeners on ports `8080` and `5173`.
-4. Starts backend and frontend in the background.
-5. Waits for `http://127.0.0.1:8080/actuator/health`.
-6. Waits for `http://127.0.0.1:5173`.
-7. Writes runtime logs under `.dev-runtime/logs/`.
+1. Parses `DB_URL` and verifies PostgreSQL server readiness with `pg_isready` or `psql`.
+2. Auto-starts local Homebrew PostgreSQL by default when the target host is local and the server is down.
+3. Auto-creates the local target database on first startup when it does not exist yet.
+4. Stops existing listeners on ports `8080` and `5173`.
+5. Starts backend and frontend in the background.
+6. Waits for `http://127.0.0.1:8080/actuator/health`.
+7. Waits for `http://127.0.0.1:5173`.
+8. Writes runtime logs under `.dev-runtime/logs/`.
 
 ## Defaults
 
@@ -41,7 +43,7 @@ Local orchestration scripts for the support roster workspace. Run all commands f
 | `PORT` | Frontend | `5173` |
 | `BACKEND_HEALTH_URL` | Restart health check | `http://127.0.0.1:8080/actuator/health` |
 | `FRONTEND_URL` | Restart health check | `http://127.0.0.1:5173` |
-| `START_LOCAL_POSTGRES_WITH_BREW` | Restart preflight | `0` |
+| `START_LOCAL_POSTGRES_WITH_BREW` | Restart preflight | `auto` |
 
 ## Individual Commands
 
@@ -82,15 +84,39 @@ Starts both services in the background with local proxy variables disabled for h
 .dev-runtime/logs/frontend.log
 ```
 
+### Initialize First Admin
+
+```bash
+./scripts/dev/init-admin.sh
+```
+
+Creates or updates a reusable local bootstrap admin with these defaults:
+
+- staff ID: `admin`
+- password: `admin`
+- team: `System Admin`
+
+The script keeps the admin attached to a valid team so validation smoke tests do not pick up an unrelated `Missing Team` issue on a fresh database.
+
+Common overrides:
+
+```bash
+ADMIN_STAFF_ID=alice \
+ADMIN_PASSWORD=secret123 \
+ADMIN_TEAM_NAME="Workspace Admin" \
+./scripts/dev/init-admin.sh
+```
+
 ## PostgreSQL Preflight
 
-`restart-all.sh` exits before stopping existing services if PostgreSQL is not ready. This protects a working frontend/backend session from being torn down when the database is unavailable.
+`restart-all.sh` exits before stopping existing services if PostgreSQL cannot be started or verified. This protects a working frontend/backend session from being torn down when the database is unavailable.
 
 Requirements:
 
 - `DB_URL` must use `jdbc:postgresql://host[:port]/database`.
-- `pg_isready` must be available in `PATH`.
-- Set `START_LOCAL_POSTGRES_WITH_BREW=1` only when you want the script to run `brew services start postgresql`.
+- Either `pg_isready` or `psql` must be available in `PATH`.
+- `psql` and `createdb` are required to auto-create the local database on first startup.
+- `START_LOCAL_POSTGRES_WITH_BREW=auto` is the default and only auto-starts Homebrew PostgreSQL for local database targets. Set it to `0` to disable automatic startup, or `1` to force Homebrew startup.
 
 ## Example
 
