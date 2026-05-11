@@ -54,6 +54,22 @@ parse_jdbc_url() {
   fi
 }
 
+normalize_admin_team_visible() {
+  local normalized_visible
+
+  normalized_visible="$(printf '%s' "$ADMIN_TEAM_VISIBLE" | tr '[:upper:]' '[:lower:]')"
+
+  case "$normalized_visible" in
+    true|false)
+      ADMIN_TEAM_VISIBLE="$normalized_visible"
+      ;;
+    *)
+      log "ADMIN_TEAM_VISIBLE must be either true or false."
+      return 1
+      ;;
+  esac
+}
+
 psql_exec() {
   PGPASSWORD="$DB_PASSWORD" psql -v ON_ERROR_STOP=1 -h "$jdbc_host" -p "$jdbc_port" -U "$DB_USERNAME" -d "$jdbc_database" "$@"
 }
@@ -106,6 +122,7 @@ activate_or_verify_login() {
 
 main() {
   parse_jdbc_url
+  normalize_admin_team_visible
 
   log "Ensuring bootstrap team, staff, and account records exist."
   psql_exec <<SQL
