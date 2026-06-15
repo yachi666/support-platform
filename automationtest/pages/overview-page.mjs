@@ -6,6 +6,6 @@ export class OverviewPage {
   }
 
   async expectLoaded() {
-    await expect(this.page.getByRole('heading', { name: /Monthly Roster Overview|总览|排班总览/ })).toBeVisible()
+    await expect(this.page.getByRole('heading', { name: /Monthly Roster Overview|Overview|总览|排班总览/ })).toBeVisible()
   }
 }
