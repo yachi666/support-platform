@@ -3,7 +3,8 @@ import { gotoApp } from '../helpers/route-assertions.mjs'
 
 const SIGN_IN_TAB = /^(登录|Sign in)$/
 const SIGN_IN_BUTTON = /^(登录|Sign in)$/
-const ACTIVATION_TAB = /^(首次激活|First-time activation)$/
+const ACTIVATION_TAB = /^(首次登录|First-time sign in)$/
+const ACTIVATION_BUTTON = /^(激活账号|Activate account)$/
 const LOGIN_HEADING = /^(使用员工 ID 登录|Sign in with your staff ID)$/
 
 export class LoginPage {
@@ -28,6 +29,13 @@ export class LoginPage {
     await this.page.locator('input[autocomplete="username"]').fill(staffId)
     await this.page.locator('input[autocomplete="current-password"]').fill(password)
     await this.page.locator('form').getByRole('button', { name: SIGN_IN_BUTTON }).click()
+  }
+
+  async activate({ staffId, newPassword }) {
+    await this.switchToActivation()
+    await this.page.locator('input[autocomplete="username"]').fill(staffId)
+    await this.page.locator('input[autocomplete="new-password"]').fill(newPassword)
+    await this.page.locator('form').getByRole('button', { name: ACTIVATION_BUTTON }).click()
   }
 
   async expectLoaded() {
